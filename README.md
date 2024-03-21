@@ -74,3 +74,8 @@ bucket = "https://speechbench-xxx.website.yandexcloud.net"
 ```
 terraform destroy
 ```
+
+## Связанные примеры
+
+- [Автоматическое батч-распознавание аудио](https://github.com/yandex-cloud-examples/yc-speechkit-async-recognizer)
+- [Пример стриминг распознавания](https://github.com/yandex-cloud-examples/yc-speechkit-streams-recognizer)

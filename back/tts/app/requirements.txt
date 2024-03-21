@@ -1,0 +1,7 @@
+pydub
+sanic
+sanic-cors
+grpcio
+grpcio-tools
+requests
+boto3

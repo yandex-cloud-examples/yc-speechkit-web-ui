@@ -1,0 +1,5 @@
+sanic
+sanic_cors
+boto3
+Werkzeug
+requests

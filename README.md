@@ -34,14 +34,14 @@
 3. API-шлюз
 4. Сервисные учетные записи для работы контейнеров
 5. Статичный ключ и API-ключ
-7. Секрет в [Lockbox](https://cloud.yandex.ru/services/lockbox) для безопасного хранения ключей, используемых функцией Cloud Function
+7. Секрет в [Lockbox](https://cloud.yandex.ru/services/lockbox) для безопасного хранения ключей
 
 В провайдере Terraform используется аутентификация через `key.json` файл. 
-При необходимости, измените аутентификацию на токен.
+При необходимости, измените аутентификацию на [токен](https://cloud.yandex.ru/ru/docs/iam/concepts/authorization/iam-token).
 
 ## Установка
 
-Чтобы запустить данный модуль, создайте файл с переменными `private.auto.tfvars` и сохраните в него folder_id и cloud_id вашего облака и каталога в нем:
+Чтобы запустить данный модуль, создайте файл с переменными `private.auto.tfvars` и сохраните в него folder_id и cloud_id вашего облака и каталога:
 ```
 cloud_id  = "b1g3xxxxxx"
 folder_id = "b1g7xxxxxx

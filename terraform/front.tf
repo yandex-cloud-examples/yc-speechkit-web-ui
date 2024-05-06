@@ -30,6 +30,7 @@ resource "yandex_storage_object" "index" {
 
   depends_on = [
     yandex_iam_service_account_static_access_key.sa-static-key,
+    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
   ]
 }
 
@@ -44,6 +45,7 @@ resource "yandex_storage_object" "error" {
 
   depends_on = [
     yandex_iam_service_account_static_access_key.sa-static-key,
+    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
   ]
 }
 
@@ -62,5 +64,6 @@ resource "yandex_storage_object" "script" {
 
   depends_on = [
     yandex_iam_service_account_static_access_key.sa-static-key,
+    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
   ]
 }

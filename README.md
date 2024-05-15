@@ -47,6 +47,8 @@ cloud_id  = "b1g3xxxxxx"
 folder_id = "b1g7xxxxxx
 ```
 
+Также [создайте](https://yandex.cloud/ru/docs/iam/operations/authorized-key/create) авторизованный ключ key.json и сохраните в папку, рядом с другими .tf файлами.
+
 После этого, можно установить модуль Terraform:
 ```
 terraform init

@@ -53,6 +53,42 @@ terraform init
 terraform apply
 ```
 
+## Кастомные голоса
+
+Словарь голосов и амплуа содержится в файле `script.js.tpl` (после развертывания – в бакете, под ключом `script.js`).
+
+Список выглядит следующим образом:
+
+```
+const voices = {
+    alena: ["neutral", "good"],
+    filipp: ["none"],
+    ermil: ["neutral", "good"],
+    jane: ["neutral", "good", "evil"],
+    madirus: ["none"],
+    omazh: ["neutral", "evil"],
+    zahar: ["neutral", "good"],
+    dasha: ["neutral", "good", "friendly"],
+    julia: ["neutral", "strict"],
+    lera: ["neutral", "friendly"],
+    masha: ["good", "strict", "friendly"],
+    marina: ["neutral", "whisper", "friendly"],
+    alexander: ["neutral", "good"],
+    kirill: ["neutral", "strict", "good"],
+    anton: ["neutral", "good"],
+    lea: ["none"],
+    john: ["none"],
+    naomi: ["modern", "classic"],
+    amira: ["none"],
+    madi: ["none"],
+    nigora: ["none"],
+};
+```
+
+Кастомный голос можно добавить новой строкой с указанием роли `none`, либо со списком ролей, если они есть в модели.
+Также, здесь можно удалить лишние или ненужные голоса.
+После этого, можно развернуть решение через `terraform apply`.
+
 ## Использование
 
 После установки, будут отображены следующие Outputs:

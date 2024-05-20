@@ -240,6 +240,8 @@ document.getElementById('sendButton').addEventListener('click', function() {
         if (response.ok) {
             response.text().then(data => {
                 var audioUrl = data;
+
+                // Playback 
                 var playbackButton = document.createElement('button');
                 playbackButton.className = 'btn btn-sm btn-primary mt-2';
                 playbackButton.innerHTML = '<i class="fas fa-play"></i> Прослушать';
@@ -248,6 +250,20 @@ document.getElementById('sendButton').addEventListener('click', function() {
                     audio.play();
                 };
                 document.getElementById('playbackButtonContainer').appendChild(playbackButton);
+
+                // Download 
+                var downloadButton = document.createElement('button');
+                downloadButton.className = 'btn btn-sm btn-primary ml-1 mt-2';
+                downloadButton.innerHTML = '<i class="fas fa-download"></i> Скачать';
+                downloadButton.onclick = function() {
+                    var link = document.createElement('a');
+                    link.href = audioUrl;
+                    link.download = 'audio.wav';
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                };
+                document.getElementById('playbackButtonContainer').appendChild(downloadButton);
             });
         } else {
             // Handle HTTP error response

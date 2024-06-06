@@ -1,4 +1,4 @@
-// словарь голосов и амплуа
+// Voices and roles dictionary
 const voices = {
     alena: ["neutral", "good"],
     filipp: ["none"],
@@ -23,14 +23,16 @@ const voices = {
     nigora: ["none"],
 };
 
-const speeds = ["0.5x", "1.0x", "1.5x", "2.0x", "3.0x"]
-const defaultVoice = 'alexander';
-const defaultRole = 'good';
+// Default values
+const speeds          = ["0.5x", "1.0x", "1.5x", "2.0x", "3.0x"]
+const defaultVoice    = 'alexander';
+const defaultRole     = 'good';
 
-// дропдауны для голоса и амплуа
-let currentVoice = '';
-let currentRole = '';
-let currentSpeed = '';
+// Dropdowns and parameters
+let currentVoice      = '';
+let currentRole       = '';
+let currentSpeed      = '';
+let currentUnsafeMode = false
 
 // TTS
 document.addEventListener('DOMContentLoaded', function () {
@@ -39,6 +41,35 @@ document.addEventListener('DOMContentLoaded', function () {
     selectDefaultSpeed("1.0x");
 });
 
+// Checking for unsafe mode toggle
+document.getElementById('unsafeModeToggle').addEventListener('change', function() {
+    currentUnsafeMode = this.checked;
+    const button = document.getElementById('unsafeModeButton');
+    
+    if (currentUnsafeMode) {
+        button.classList.remove('btn-outline-danger');
+        button.classList.add('btn-danger');
+    } else {
+        button.classList.remove('btn-danger');
+        button.classList.add('btn-outline-danger');
+    }
+
+    const textInput = document.getElementById('textInput');
+    
+    document.getElementById('unsafeMode').value = currentUnsafeMode ? 'true' : 'false';
+    
+    if (currentUnsafeMode) {
+        textInput.setAttribute('maxlength', '5000');
+    } else {
+        textInput.setAttribute('maxlength', '250');
+    }
+
+    var currentLength = textInput.value.length;
+    maxLength = textInput.getAttribute('maxlength');
+    charCount.textContent = currentLength + '/' + maxLength;
+});
+
+// Populating voices dropdown based on the dictionary
 function populateVoicesDropdown() {
     const voicesDropdownMenu = document.querySelector('#voicesDropdown').nextElementSibling;
     for (const voice in voices) {
@@ -55,6 +86,7 @@ function populateVoicesDropdown() {
     }
 }
 
+// Populating speeds dropdown based on default values
 function populateSpeedsDropdown() {
     const speedsDropdownMenu = document.querySelector('#speedsDropdown').nextElementSibling;
     speeds.forEach(function(speed) {
@@ -70,18 +102,21 @@ function populateSpeedsDropdown() {
     });
 }
 
+// Selecting default voice
 function selectDefaultVoice(name) {
     currentVoice = name
     populateRolesDropdown(name);
     document.querySelector('#voicesDropdown').textContent = name;
 }
 
+// Selecting default speed
 function selectDefaultSpeed(speed) {
     currentSpeed = speed;
     populateSpeedsDropdown(speed);
     document.querySelector('#speedsDropdown').textContent = speed;
 }
 
+// Populating roles dropdown
 function populateRolesDropdown(name) {
     const roles = voices[name];
     const rolesDropdownMenu = document.querySelector('#rolesDropdown').nextElementSibling;
@@ -104,23 +139,25 @@ function populateRolesDropdown(name) {
     });
   }
 
-// отображаем curl команду
+// Generating curl command
 function updateCurlCommand(text) {
     var curlCmd = 'curl -X POST "${api_gw}/tts" \\\n' +
                   '-H "Content-Type: application/json" \\\n' +
                   '-d \'' + JSON.stringify({ text: text,
                     voice: currentVoice,
                     role: currentRole,
+                    unsafe: currentUnsafeMode,
                     speed: currentSpeed }).replace(/'/g, "\\'") + '\'';
     document.getElementById('curlCommand').textContent = curlCmd;
 }
 
+// Updating curl command based on the text change
 var textArea = document.getElementById('textInput');
 textArea.addEventListener('input', function() {
     updateCurlCommand(textArea.value);
 });
 
-// разметка текста
+// Support TTS formatting buttons
 document.getElementById('insertPauseTiny').addEventListener('click', function() {
     var startPos = textArea.selectionStart;
     var endPos = textArea.selectionEnd;
@@ -186,7 +223,6 @@ document.getElementById('insertPauseHuge').addEventListener('click', function() 
     updateCurlCommand(textArea.value);
 });
 
-
 document.getElementById('insertPauseMs').addEventListener('click', function() {
     var startPos = textArea.selectionStart;
     var endPos = textArea.selectionEnd;
@@ -199,7 +235,6 @@ document.getElementById('insertPauseMs').addEventListener('click', function() {
     textArea.selectionEnd = startPos + textToInsert.length;
     updateCurlCommand(textArea.value);
 });
-
 
 document.getElementById('insertStress').addEventListener('click', function() {
     var startPos = textArea.selectionStart;
@@ -214,7 +249,7 @@ document.getElementById('insertStress').addEventListener('click', function() {
     updateCurlCommand(textArea.value);
 });
 
-// отправка запроса для синтеза
+// Sending the request
 document.getElementById('sendButton').addEventListener('click', function() {
     var text = textArea.value;
     updateCurlCommand(text);
@@ -231,7 +266,8 @@ document.getElementById('sendButton').addEventListener('click', function() {
             text: text,
             voice: currentVoice,
             role: currentRole,
-            speed: currentSpeed
+            speed: currentSpeed,
+            unsafe: currentUnsafeMode
         }),
     })
     .then(response => {
@@ -241,7 +277,7 @@ document.getElementById('sendButton').addEventListener('click', function() {
             response.text().then(data => {
                 var audioUrl = data;
 
-                // Playback 
+                // Playback button
                 var playbackButton = document.createElement('button');
                 playbackButton.className = 'btn btn-sm btn-primary mt-2';
                 playbackButton.innerHTML = '<i class="fas fa-play"></i> Прослушать';
@@ -251,7 +287,7 @@ document.getElementById('sendButton').addEventListener('click', function() {
                 };
                 document.getElementById('playbackButtonContainer').appendChild(playbackButton);
 
-                // Download 
+                // Download button
                 var downloadButton = document.createElement('button');
                 downloadButton.className = 'btn btn-sm btn-primary ml-1 mt-2';
                 downloadButton.innerHTML = '<i class="fas fa-download"></i> Скачать';
@@ -277,7 +313,7 @@ document.getElementById('sendButton').addEventListener('click', function() {
     });
 });
 
-// копирование curl команды
+// Copy curl command button
 document.getElementById('copyButton').addEventListener('click', function() {
     var curlCommand = document.getElementById('curlCommand').textContent;
     navigator.clipboard.writeText(curlCommand).then(function() {
@@ -287,7 +323,7 @@ document.getElementById('copyButton').addEventListener('click', function() {
     });
 });
 
-// загрузка файла
+// Downloading a file
 $(document).ready(function() {
 
     $('#fileInput').on('change', function() {
@@ -321,7 +357,7 @@ $(document).ready(function() {
         document.getElementById('resultSttTagOne').innerHTML = '';
         document.getElementById('resultSttTagTwo').innerHTML = '';
 
-        // presign url
+        // Presigning url
         encoded_filename = encodeURIComponent(fileName)
         $.ajax({
             type: 'GET',
@@ -386,6 +422,7 @@ $(document).ready(function() {
     });
 });
 
+// Checking operation
 function checkOperationStatus(operationId) {
     var checkStatus = function() {
         var url = '${api_gw}/operation?operationId=' + operationId;
@@ -458,7 +495,7 @@ function checkOperationStatus(operationId) {
     checkStatus();
 }
 
-// валидация кол-ва символов
+// Validating the number of symbols
 document.addEventListener('DOMContentLoaded', function () {
     var textInput = document.getElementById('textInput');
     var charCount = document.getElementById('charCount');
@@ -466,6 +503,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function updateCharCount() {
         var currentLength = textInput.value.length;
+        maxLength = textInput.getAttribute('maxlength');
         charCount.textContent = currentLength + '/' + maxLength;
     }
 

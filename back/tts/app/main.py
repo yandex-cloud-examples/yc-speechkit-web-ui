@@ -50,13 +50,14 @@ async def start(request):
     request_json = request.json
     print(f"Received JSON: {request_json}")
 
-    text_value = request_json.get("text", "Empty")
-    voice_value = request_json.get("voice", "alexander")
-    role_value = request_json.get("role", "good")
-    speed_value_raw = request_json.get("speed")
-    speed_value = check_speed(speed_value_raw)
+    text_value        = request_json.get("text", "Empty")
+    voice_value       = request_json.get("voice", "alexander")
+    role_value        = request_json.get("role", "good")
+    speed_value_raw   = request_json.get("speed")
+    speed_value       = check_speed(speed_value_raw)
+    unsafe_mode_value = request_json.get("unsafe", False)
 
-    audio = synthesize(text_value, voice_value, role_value, speed_value)
+    audio = synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_value)
 
     filename = f"audio-{uuid.uuid4()}.wav"
 
@@ -92,7 +93,7 @@ def check_speed(input_value):
         return 1.1
 
 # Function - Synthesize
-def synthesize(text_value, voice_value, role_value, speed_value) -> pydub.AudioSegment: 
+def synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_value) -> pydub.AudioSegment: 
 
     if role_value == "none":
         request = tts_pb2.UtteranceSynthesisRequest(
@@ -106,7 +107,8 @@ def synthesize(text_value, voice_value, role_value, speed_value) -> pydub.AudioS
             tts_pb2.Hints(voice = voice_value),
             tts_pb2.Hints(speed = speed_value),
             ],
-            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS
+            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
+            unsafe_mode=unsafe_mode_value
         )
     else:
         request = tts_pb2.UtteranceSynthesisRequest(
@@ -121,7 +123,8 @@ def synthesize(text_value, voice_value, role_value, speed_value) -> pydub.AudioS
             tts_pb2.Hints(role  = role_value),
             tts_pb2.Hints(speed = speed_value),
             ],
-            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS
+            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
+            unsafe_mode=unsafe_mode_value
         )
 
     cred = grpc.ssl_channel_credentials()

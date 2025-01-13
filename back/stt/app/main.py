@@ -4,6 +4,7 @@ import logging
 import os
 import requests
 import uuid
+import json
 
 from botocore.exceptions import ClientError
 from sanic import Sanic, response
@@ -37,7 +38,18 @@ s3 = boto3.client('s3',
 # Application
 app = Sanic(__name__)
 app.config.REQUEST_MAX_SIZE = 1024 * 1024 * 1024
-CORS(app)
+CORS(
+    app,
+    resources={
+        r"/*": {
+            "origins": "*",
+            "allow_headers": ["*"],
+            "expose_headers": ["ETag"],
+            "methods": ["GET", "POST", "PUT", "OPTIONS"],
+        }
+    },
+    automatic_options=True
+)
 
 @app.after_server_start
 async def after_server_start(app, loop):
@@ -83,13 +95,17 @@ async def operation_status(request):
     if not (is_done['done']):
         logging.info("Operation in progress: {}".format(operation_id))
         return response.json({"message": "Operation in progress", "operation": operation_id, "done": "false"})
+    
+    complete_data = {
+        "message": "Operation is complete",
+        "operation": operation_id,
+        "done": "true",
+        "result": is_done["response"]
+    }
 
-    return response.json({
-        "message": "Operation is complete", 
-        "operation": operation_id, 
-        "done": "true", 
-        "result": is_done['response']
-    })
+    upload_results(complete_data, operation_id)
+
+    return response.json(complete_data)
 
 @app.get("/presign")
 async def get(request):
@@ -152,6 +168,16 @@ def create_presigned_url(action, object, expiration = 3600):
         return response
     else:
         logging.error("Generate presigned URL failed: No action received")
+        return None
+
+# Function - Save to bucket
+def upload_results(data, key):
+    try:
+        s3.put_object(Bucket=config['s3_bucket'], Key=f"results/{key}.json", Body=json.dumps(data))
+        logging.info("Results were saved: {}".format(key))
+        return True
+    except ClientError as e:
+        logging.error("Object upload failed: {}".format(e))
         return None
 
 # Function - Create recognition task

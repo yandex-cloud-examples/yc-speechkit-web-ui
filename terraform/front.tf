@@ -58,7 +58,7 @@ resource "yandex_storage_object" "script" {
   source_hash = filemd5("../front/script.js.tpl")
   content = templatefile("../front/script.js.tpl",
     {
-      api_gw   = "https://${yandex_api_gateway.api-gw.id}.apigw.yandexcloud.net",
+      api_gw   = "https://${yandex_api_gateway.api-gw.domain}",
     }
   )
 

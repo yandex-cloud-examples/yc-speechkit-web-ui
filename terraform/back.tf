@@ -64,7 +64,7 @@ resource "yandex_serverless_container" "stt" {
   }
 
   image {
-      url = "cr.yandex/sol/speechkit-workbench/stt-service:1.0.0"
+      url = "cr.yandex/sol/speechkit-workbench/stt-service:1.0.1"
       environment = {
           S3_BUCKET = yandex_storage_bucket.front.bucket
       }
@@ -79,6 +79,12 @@ resource "yandex_api_gateway" "api-gw" {
     info:
       title: SpeechKit Workbench API
       version: 1.0.0
+
+    x-yc-apigateway:
+      cors:
+        origin: '*'
+        methods: '*'
+        allowedHeaders: '*'
 
     paths:
       /tts:

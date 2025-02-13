@@ -37,7 +37,7 @@ This module creates the following resources:
 7. [Lockbox](https://cloud.yandex.ru/services/lockbox) secret to store the keys securely.
 
 Terraform provider employs authentication via `key.json`. To deploy this solution, you will need the `admin` role for the folder to create service accounts and assign roles.
-You can change the authentication type to [token](https://cloud.yandex.ru/ru/docs/iam/concepts/authorization/iam-token), if required.
+You can change the authentication type to [token](https://yandex.cloud/en/docs/iam/concepts/authorization/iam-token), if required.
 
 ## Installation
 

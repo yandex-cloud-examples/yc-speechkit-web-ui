@@ -6,7 +6,7 @@
   title="SpeechKit Workbench"
   style="display: inline-block; margin: 0 auto; max-width: 600px">
 
-This repository contains an example web app that accesses [Yandex SpeechKit](https://cloud.yandex.com/ru/services/speechkit) and displays its output in a web interface.
+This repository contains an example web app that accesses [Yandex SpeechKit](https://yandex.cloud/en/services/speechkit) and displays its output in a web interface.
 
 The app allows you to check out the speech recognition and synthesis features, as well as explore various parameters available for speech synthesis:
 - You can select and test the available [voices](https://cloud.yandex.com/ru/docs/speechkit/tts/voices).

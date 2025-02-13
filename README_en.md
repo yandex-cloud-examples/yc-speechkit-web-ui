@@ -9,7 +9,7 @@
 This repository contains an example web app that accesses [Yandex SpeechKit](https://yandex.cloud/en/services/speechkit) and displays its output in a web interface.
 
 The app allows you to check out the speech recognition and synthesis features, as well as explore various parameters available for speech synthesis:
-- You can select and test the available [voices](https://cloud.yandex.com/ru/docs/speechkit/tts/voices).
+- You can select and test the available [voices](https://yandex.cloud/en/docs/speechkit/tts/voices).
 - You can use the [TTS markup](https://cloud.yandex.com/ru/docs/speechkit/tts/markup/tts-markup).
 
 The app features the following components:

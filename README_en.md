@@ -48,7 +48,7 @@ cloud_id = "b1g3xxxxxx"
 folder_id = "b1g7xxxxxx
 ```
 
-Also, [create](https://yandex.cloud/ru/docs/iam/operations/authorized-key/create) the `key.json` authorized key and save it in the folder, next to the other `.tf` files.
+Also, [create](https://yandex.cloud/en/docs/iam/operations/authorized-key/create) the `key.json` authorized key and save it in the folder, next to the other `.tf` files.
 
 After that, you can install the Terraform module:
 

@@ -222,28 +222,14 @@ function populateRolesDropdown(name) {
     });
 }
 
-// Generating curl command
-function updateCurlCommand(text) {
-    var curlCmd = 'curl -X POST "${api_gw}/tts" \\\n' +
-                  '-H "Content-Type: application/json" \\\n' +
-                  '-d \'' + JSON.stringify({ 
-                      text: text,
-                      voice: currentVoice,
-                      role: currentRole,
-                      unsafe: currentUnsafeMode,
-                      speed: currentSpeed 
-                  }).replace(/'/g, "\\'") + '\'';
-    document.getElementById('curlCommand').textContent = curlCmd;
-}
 
 document.addEventListener('DOMContentLoaded', function() {
     // Text area and character count
     var textArea = document.getElementById('textInput');
     var charCount = document.getElementById('charCount');
     
-    // Update curl command when text changes
+    // Update character count when text changes
     textArea.addEventListener('input', function() {
-        updateCurlCommand(textArea.value);
         var currentLength = textArea.value.length;
         var maxLength = textArea.getAttribute('maxlength');
         charCount.textContent = currentLength + '/' + maxLength;
@@ -264,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function() {
         textArea.focus();
         textArea.selectionStart = startPos + textToInsert.length;
         textArea.selectionEnd = startPos + textToInsert.length;
-        updateCurlCommand(textArea.value);
         
         // Update character count
         var currentLength = textArea.value.length;
@@ -303,7 +288,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Send TTS request
     document.getElementById('sendButton').addEventListener('click', function() {
         var text = textArea.value;
-        updateCurlCommand(text);
         
         document.getElementById('processing').style.display = 'inline-block';
         document.getElementById('sendButton').style.display = 'none';
@@ -361,22 +345,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Error:', error);
             document.getElementById('processing').style.display = 'none';
             document.getElementById('sendButton').style.display = 'inline-block';
-        });
-    });
-    
-    // Copy curl command
-    document.getElementById('copyButton').addEventListener('click', function() {
-        var curlCommand = document.getElementById('curlCommand').textContent;
-        navigator.clipboard.writeText(curlCommand).then(function() {
-            console.log('Curl command copied to clipboard');
-            // Optional: Show feedback to user
-            const originalText = this.textContent;
-            this.textContent = 'Скопировано!';
-            setTimeout(() => {
-                this.textContent = originalText;
-            }, 1500);
-        }.bind(this), function(err) {
-            console.error('Could not copy text: ', err);
         });
     });
     

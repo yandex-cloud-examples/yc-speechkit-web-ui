@@ -348,6 +348,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Copy button functionality
+    document.getElementById('copyJsonBtn').addEventListener('click', function() {
+        const resultSttDiv = document.getElementById('resultStt');
+        const textToCopy = resultSttDiv.textContent;
+        
+        navigator.clipboard.writeText(textToCopy).then(function() {
+            const originalText = this.textContent;
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 1500);
+        }.bind(this));
+    });
+    
+    document.getElementById('copyChannel1Btn').addEventListener('click', function() {
+        const resultDiv = document.getElementById('resultSttTagOne');
+        const textToCopy = resultDiv.textContent;
+        
+        navigator.clipboard.writeText(textToCopy).then(function() {
+            const originalText = this.textContent;
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 1500);
+        }.bind(this));
+    });
+    
+    document.getElementById('copyChannel2Btn').addEventListener('click', function() {
+        const resultDiv = document.getElementById('resultSttTagTwo');
+        const textToCopy = resultDiv.textContent;
+        
+        navigator.clipboard.writeText(textToCopy).then(function() {
+            const originalText = this.textContent;
+            this.textContent = 'Copied!';
+            setTimeout(() => {
+                this.textContent = originalText;
+            }, 1500);
+        }.bind(this));
+    });
+    
     // STT file input handling
     document.getElementById('fileInput').addEventListener('change', function() {
         var file = this.files[0];
@@ -433,11 +473,32 @@ function checkOperationStatus(operationId) {
                     document.getElementById('processingStt').style.display = 'none';
                     document.getElementById('sendButtonStt').style.display = 'inline-block';
                     
-                    // Display raw JSON
+                    // Display beautified JSON
                     var resultSttDiv = document.getElementById("resultStt");
-                    var newParagraphStt = document.createElement("p");
+                    var newParagraphStt = document.createElement("pre");
                     var responseTextStt = JSON.stringify(response, null, 2);
-                    newParagraphStt.innerHTML = responseTextStt;
+                    
+                    // Beautify JSON with syntax highlighting
+                    const highlighted = responseTextStt.replace(
+                        /("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g,
+                        function (match) {
+                            let cls = 'json-number';
+                            if (/^"/.test(match)) {
+                                if (/:$/.test(match)) {
+                                    cls = 'json-key';
+                                } else {
+                                    cls = 'json-string';
+                                }
+                            } else if (/true|false/.test(match)) {
+                                cls = 'json-boolean';
+                            } else if (/null/.test(match)) {
+                                cls = 'json-null';
+                            }
+                            return '<span class="' + cls + '">' + match + '</span>';
+                        }
+                    );
+                    
+                    newParagraphStt.innerHTML = highlighted;
                     resultSttDiv.appendChild(newParagraphStt);
                     
                     // Process channel data

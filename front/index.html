@@ -144,10 +144,46 @@
         }
         #resultStt, #resultSttTagOne, #resultSttTagTwo {
             font-size: 0.75rem;
+            position: relative;
         }
         #processing, #processingStt {
             display: none;
             vertical-align: middle;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: #95a5a6;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 3px 8px;
+            font-size: 12px;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .copy-btn:hover {
+            opacity: 1;
+            background: #7f8c8d;
+        }
+        .result-container {
+            position: relative;
+        }
+        .json-key {
+            color: #881391;
+        }
+        .json-string {
+            color: #1A1AA6;
+        }
+        .json-number {
+            color: #1A1AA6;
+        }
+        .json-boolean {
+            color: #1A1AA6;
+        }
+        .json-null {
+            color: #1A1AA6;
         }
     </style>
 </head>
@@ -250,13 +286,22 @@
             </form>
             
             <h6>Raw JSON</h6>
-            <div id="resultStt" class="bg-light text-monospace text-break"></div>
+            <div class="result-container">
+                <div id="resultStt" class="bg-light text-monospace text-break"></div>
+                <button class="copy-btn" id="copyJsonBtn">Copy</button>
+            </div>
             
             <h6>Channel Tag 1</h6>
-            <div id="resultSttTagOne" class="bg-light text-monospace text-break"></div>
+            <div class="result-container">
+                <div id="resultSttTagOne" class="bg-light text-monospace text-break"></div>
+                <button class="copy-btn" id="copyChannel1Btn">Copy</button>
+            </div>
             
             <h6>Channel Tag 2</h6>
-            <div id="resultSttTagTwo" class="bg-light text-monospace text-break"></div>
+            <div class="result-container">
+                <div id="resultSttTagTwo" class="bg-light text-monospace text-break"></div>
+                <button class="copy-btn" id="copyChannel2Btn">Copy</button>
+            </div>
         </div>
     </div>
     

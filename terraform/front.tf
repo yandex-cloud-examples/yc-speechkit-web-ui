@@ -17,6 +17,11 @@ resource "yandex_storage_bucket" "front" {
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
+
+  depends_on = [
+    yandex_iam_service_account_static_access_key.sa-static-key,
+    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
+  ]
 }
 
 resource "yandex_storage_object" "index" {

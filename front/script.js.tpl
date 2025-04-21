@@ -1,10 +1,16 @@
 // Voices and roles dictionary
 const voices = {
+    lea: ["none"],
+    john: ["none"],
+    naomi: ["modern", "classic"],
+    amira: ["none"],
+    madi: ["none"],
+    saule: ["neutral", "strict"],
+    zhanar: ["neutral", "friendly"],
     alena: ["neutral", "good"],
     filipp: ["none"],
     ermil: ["neutral", "good"],
     jane: ["neutral", "good", "evil"],
-    madirus: ["none"],
     omazh: ["neutral", "evil"],
     zahar: ["neutral", "good"],
     dasha: ["neutral", "good", "friendly"],
@@ -15,18 +21,20 @@ const voices = {
     alexander: ["neutral", "good"],
     kirill: ["neutral", "strict", "good"],
     anton: ["neutral", "good"],
-    lea: ["none"],
-    john: ["none"],
-    naomi: ["modern", "classic"],
-    amira: ["none"],
-    madi: ["none"],
+    madi_ru: ["none"],
+    saule_ru: ["neutral", "strict", "whisper"],
+    lola_ru: ["neutral", "strict"],
+    zhanar_ru: ["neutral", "strict", "friendly"],
+    yulduz_ru: ["neutral", "strict", "friendly"],
     nigora: ["none"],
+    lola: ["none"],
+    yulduz: ["none"]
 };
 
 // Default values
 const speeds = ["0.5x", "1.0x", "1.5x", "2.0x", "3.0x"];
-const defaultVoice = 'alexander';
-const defaultRole = 'good';
+const defaultVoice = 'marina';
+const defaultRole = 'neutral';
 
 // Dropdowns and parameters
 let currentVoice = '';

@@ -3,153 +3,268 @@
 <head>
     <meta charset="UTF-8">
     <title>SpeechKit Workbench</title>
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        h5, h6 {
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tab {
+            padding: 10px 15px;
+            cursor: pointer;
+            background: #f8f8f8;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            margin-right: 5px;
+        }
+        .tab.active {
+            background: white;
+            border-bottom: 1px solid white;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px 0;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        textarea, select, input[type="file"], input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 5px;
+            margin-bottom: 5px;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        .btn-secondary {
+            background: #95a5a6;
+        }
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+        .btn-success {
+            background: #2ecc71;
+        }
+        .btn-success:hover {
+            background: #27ae60;
+        }
+        .btn-danger {
+            background: #e74c3c;
+        }
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+        .btn-outline-danger {
+            background: white;
+            color: #e74c3c;
+            border: 1px solid #e74c3c;
+        }
+        .btn-outline-danger:hover {
+            background: #e74c3c;
+            color: white;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .bg-light {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            font-family: monospace;
+            margin: 0;
+        }
+        .spinner {
+            display: inline-block;
+            width: 15px;
+            height: 15px;
+            border: 2px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top-color: #3498db;
+            animation: spin 1s ease-in-out infinite;
+            margin-right: 5px;
+            vertical-align: middle;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .hidden {
+            display: none;
+        }
+        .text-monospace {
+            font-family: monospace;
+        }
+        .text-break {
+            word-break: break-word;
+        }
+        #charCount {
+            font-size: 0.8em;
+            color: #7f8c8d;
+            margin-bottom: 10px;
+        }
+        #resultStt, #resultSttTagOne, #resultSttTagTwo {
+            font-size: 0.75rem;
+        }
+        #processing, #processingStt {
+            display: none;
+            vertical-align: middle;
+        }
+    </style>
 </head>
-<style>
-    #processing {
-        display: none;
-        vertical-align: middle;
-    }
-    #processingStt {
-        vertical-align: middle;
-    }
-    #resultStt {
-        font-size: 0.75rem;
-    }
-    #resultSttTagOne {
-        font-size: 0.75rem;
-    }
-    #resultSttTagTwo {
-        font-size: 0.75rem;
-    }
-</style>
 <body>
-    <div class="container mt-4">
-        <!-- title -->
-        <div class="row">
-            <div class="col-md-12">
-                <h2>SpeechKit Workbench</h2>
-            </div>
+    <div class="container">
+        <h2>SpeechKit Workbench</h2>
+        
+        <!-- Simple tabs -->
+        <div class="tabs">
+            <div class="tab active" data-tab="textToSpeech">TTS</div>
+            <div class="tab" data-tab="speechToText">STT</div>
         </div>
-        <!-- nav -->
-        <ul class="nav nav-tabs">
-            <li class="nav-item">
-                <a class="nav-link active" data-toggle="tab" href="#textToSpeech">TTS</a>
-            </li>
-            <li class="nav-item">
-                <a class="nav-link" data-toggle="tab" href="#speechToText">STT</a>
-            </li>
-        </ul>
-        <!-- tabs -->
-        <div class="tab-content">
-            <!-- tts -->
-            <div id="textToSpeech" class="container tab-pane active"><br>
-                <h5>Text-to-Speech</h5>
-                <textarea id="textInput" class="form-control" rows="3" maxlength="250"></textarea>
-                <div id="charCount" class="small">0/250</div>
-                <div class="mt-2">
-                    <button id="insertPauseTiny" class="btn btn-sm btn-secondary mt-2"><[tiny]></button>
-                    <button id="insertPauseSmall" class="btn btn-sm btn-secondary mt-2"><[small]></button>
-                    <button id="insertPauseMedium" class="btn btn-sm btn-secondary mt-2"><[medium]></button>
-                    <button id="insertPauseLarge" class="btn btn-sm btn-secondary mt-2"><[large]></button>
-                    <button id="insertPauseHuge" class="btn btn-sm btn-secondary mt-2"><[huge]></button>
-                    <button id="insertPauseMs" class="btn btn-sm btn-secondary mt-2">sil<[500]></button>
-                    <button id="insertStress" class="btn btn-sm btn-secondary mt-2">+</button>
+        
+        <!-- Tab content -->
+        <div class="tab-content active" id="textToSpeech">
+            <h5>Text-to-Speech</h5>
+            <textarea id="textInput" rows="3" maxlength="250"></textarea>
+            <div id="charCount">0/250</div>
+            
+            <div>
+                <button id="insertPauseTiny" class="btn-secondary">&lt;[tiny]&gt;</button>
+                <button id="insertPauseSmall" class="btn-secondary">&lt;[small]&gt;</button>
+                <button id="insertPauseMedium" class="btn-secondary">&lt;[medium]&gt;</button>
+                <button id="insertPauseLarge" class="btn-secondary">&lt;[large]&gt;</button>
+                <button id="insertPauseHuge" class="btn-secondary">&lt;[huge]&gt;</button>
+                <button id="insertPauseMs" class="btn-secondary">sil&lt;[500]&gt;</button>
+                <button id="insertStress" class="btn-secondary">+</button>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <div class="custom-dropdown">
+                    <button id="voicesDropdown">Голос</button>
+                    <div class="dropdown-content" id="voicesDropdownContent"></div>
                 </div>
-                <div class="mt-2">
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" id="voicesDropdown">
-                          Голос
-                        </button>
-                        <div class="dropdown-menu">
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" id="rolesDropdown">
-                          Амплуа
-                        </button>
-                        <div class="dropdown-menu">
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-expanded="false" id="speedsDropdown">
-                          Скорость
-                        </button>
-                        <div class="dropdown-menu">
-                        </div>
-                    </div>
-                    <div class="btn-group">
-                        <div class="form-check form-switch btn btn-sm btn-outline-danger" id="unsafeModeButton">
-                            <input class="form-check-input d-none" type="checkbox" id="unsafeModeToggle">
-                            <label class="form-check-label" for="unsafeModeToggle">Unsafe Mode</label>
-                        </div>
-                    </div>
+                
+                <div class="custom-dropdown">
+                    <button id="rolesDropdown">Амплуа</button>
+                    <div class="dropdown-content" id="rolesDropdownContent"></div>
+                </div>
+                
+                <div class="custom-dropdown">
+                    <button id="speedsDropdown">Скорость</button>
+                    <div class="dropdown-content" id="speedsDropdownContent"></div>
+                </div>
+                
+                <div>
+                    <button id="unsafeModeButton" class="btn-outline-danger">
+                        <span id="unsafeModeLabel">Unsafe Mode</span>
+                    </button>
                     <input type="hidden" id="unsafeMode" name="unsafeMode" value="false">
                 </div>
-                <div class="mt-2">
-                    <button id="sendButton" class="btn btn-sm btn-primary mt-2">Отправить</button>
-                    <button id="processing" class="btn btn-primary btn-sm mt-2" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span class="sr-only">Обработка запроса...</span>
-                    </button>
-                </div>
-                <div id="playbackButtonContainer" class="mt-2"></div>
-                <div class="mt-3 bg-light p-3">
-                    <pre id="curlCommand" class="mb-0"></pre>
-                    <button id="copyButton" class="btn btn-sm btn-success mt-2">Скопировать</button>
-                </div>
             </div>
-            <!-- stt -->
-            <div id="speechToText" class="container tab-pane fade"><br>
-                <h5>Speech-to-Text</h5>
-                <form id="audioUploadForm" enctype="multipart/form-data">
-                    <div class="form-group">
-                        <label for="fileInput">Загрузка аудиофайла</label>
-                        <input type="file" class="form-control-file" id="fileInput" name="file">
-                    </div>
-                    <div class="form-group">
-                        <label for="languageSelect">Language</label>
-                        <select class="form-control" id="languageSelect" name="lang">
-                            <option value="ru-RU">Русский</option>
-                            <option value="auto">Автоматически</option>
-                            <option value="en-US">Английский</option>
-                            <option value="kk-KZ">Казахский</option>
-                            <option value="tr-TR">Турецкий</option>
-                            <option value="uz-UZ">Узбекский</option>
-                            <option value="de-DE">Немецкий</option>
-                            <option value="es-ES">Испанский</option>
-                            <option value="fr-FR">Французский</option>
-                            <option value="it-IT">Итальянский</option>
-                            <option value="pl-PL">Польский</option>
-                        </select>
-                    </div>
-                    <div class="form-group d-none" id="rateForm">
-                        <label for="sampleRateInput">Sample Rate (Hz)</label>
-                        <input type="number" class="form-control" id="sampleRateInput" name="sampleRate" value="48000">
-                    </div>
-                    <button id="sendButtonStt" type="submit" class="btn btn-primary btn-sm mt-2 d-inline-block">Отправить</button>
-                    <button id="processingStt" class="btn btn-primary btn-sm mt-2 d-none" type="button" disabled>
-                        <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
-                        <span class="sr-only">Обработка запроса...</span>
-                    </button>
-                </form>
-                <h6 class="mt-4">Raw JSON</h6>
-                <div id="resultStt" class="mt-2 bg-light text-dark text-monospace p-3 text-break">
-                </div>
-                <h6 class="mt-2">Channel Tag 1</h6>
-                <div id="resultSttTagOne" class="mt-2 bg-light text-dark text-monospace p-3 text-break">
-                </div>
-                <h6 class="mt-2">Channel Tag 2</h6>
-                <div id="resultSttTagTwo" class="mt-2 bg-light text-dark text-monospace p-3 text-break">
-                </div>
+            
+            <div style="margin-top: 15px;">
+                <button id="sendButton">Отправить</button>
+                <button id="processing" disabled>
+                    <span class="spinner"></span>
+                    <span>Обработка запроса...</span>
+                </button>
+            </div>
+            
+            <div id="playbackButtonContainer"></div>
+            
+            <div class="bg-light">
+                <pre id="curlCommand"></pre>
+                <button id="copyButton" class="btn-success">Скопировать</button>
             </div>
         </div>
+        
+        <div class="tab-content" id="speechToText">
+            <h5>Speech-to-Text</h5>
+            <form id="audioUploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="fileInput">Загрузка аудиофайла</label>
+                    <input type="file" id="fileInput" name="file">
+                </div>
+                
+                <div class="form-group">
+                    <label for="languageSelect">Language</label>
+                    <select id="languageSelect" name="lang">
+                        <option value="ru-RU">Русский</option>
+                        <option value="auto">Автоматически</option>
+                        <option value="en-US">Английский</option>
+                        <option value="kk-KZ">Казахский</option>
+                        <option value="tr-TR">Турецкий</option>
+                        <option value="uz-UZ">Узбекский</option>
+                        <option value="de-DE">Немецкий</option>
+                        <option value="es-ES">Испанский</option>
+                        <option value="fr-FR">Французский</option>
+                        <option value="it-IT">Итальянский</option>
+                        <option value="pl-PL">Польский</option>
+                    </select>
+                </div>
+                
+                <div class="form-group hidden" id="rateForm">
+                    <label for="sampleRateInput">Sample Rate (Hz)</label>
+                    <input type="number" id="sampleRateInput" name="sampleRate" value="48000">
+                </div>
+                
+                <button id="sendButtonStt" type="submit">Отправить</button>
+                <button id="processingStt" disabled style="display: none;">
+                    <span class="spinner"></span>
+                    <span>Обработка запроса...</span>
+                </button>
+            </form>
+            
+            <h6>Raw JSON</h6>
+            <div id="resultStt" class="bg-light text-monospace text-break"></div>
+            
+            <h6>Channel Tag 1</h6>
+            <div id="resultSttTagOne" class="bg-light text-monospace text-break"></div>
+            
+            <h6>Channel Tag 2</h6>
+            <div id="resultSttTagTwo" class="bg-light text-monospace text-break"></div>
+        </div>
     </div>
-    <!-- base scripts -->
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    
     <script src="script.js"></script>
 </body>
 </html>

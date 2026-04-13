@@ -11,8 +11,8 @@ from datetime import datetime
 
 from botocore.exceptions import ClientError
 
-import yandex.cloud.ai.tts.v3.tts_pb2 as tts_pb2
-import yandex.cloud.ai.tts.v3.tts_service_pb2_grpc as tts_service_pb2_grpc
+from yandex.cloud.ai.tts.v3 import tts_pb2
+from yandex.cloud.ai.tts.v3 import tts_service_pb2_grpc
 
 from sanic import Sanic
 from sanic.response import text

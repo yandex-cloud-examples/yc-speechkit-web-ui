@@ -5,3 +5,4 @@ grpcio
 grpcio-tools
 requests
 boto3
+yandexcloud

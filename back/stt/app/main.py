@@ -291,9 +291,11 @@ def get_recognition_results(operation_id):
                     if entry:
                         results.append(entry)
 
-            # Capture speaker analysis events
+            # Capture speaker analysis events (only TOTAL window type)
             if 'speaker_analysis' in chunk:
-                speaker_analysis_list.append(chunk['speaker_analysis'])
+                sa = chunk['speaker_analysis']
+                if sa.get('window_type') == 'TOTAL':
+                    speaker_analysis_list.append(sa)
 
             # Capture conversation analysis event (last one wins)
             if 'conversation_analysis' in chunk:

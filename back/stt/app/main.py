@@ -278,12 +278,6 @@ def get_recognition_results(operation_id):
                         'channelTag': channel_tag,
                         'alternatives': [{'text': alt.get('text', '')} for alt in alternatives]
                     }
-            elif 'final' in chunk:
-                alternatives = chunk['final'].get('alternatives', [])
-                entry = {
-                    'channelTag': channel_tag,
-                    'alternatives': [{'text': alt.get('text', '')} for alt in alternatives]
-                }
 
             if entry:
                 results.append(entry)

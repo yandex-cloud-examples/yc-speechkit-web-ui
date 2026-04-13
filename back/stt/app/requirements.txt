@@ -5,4 +5,4 @@ grpcio
 grpcio-tools
 protobuf
 requests
-yandex-cloud-sdk-proto
+yandexcloud

@@ -483,7 +483,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({
                         key: objectKey,
                         lang: lang,
-                        rate: rate
+                        rate: rate,
+                        summaryInstruction: document.getElementById('summaryInstructionInput').value
                     })
                 }).then(response => response.json());
             })

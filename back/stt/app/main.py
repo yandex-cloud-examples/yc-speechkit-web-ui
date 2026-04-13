@@ -75,6 +75,7 @@ async def upload_file(request: Request):
     lang = data.get('lang', 'auto')
     rate = data.get('rate', 48000)
 
+    summary_instruction = data.get('summaryInstruction', 'Summarize this conversation briefly, highlighting the key points and outcome.')
     print(f"rate: {rate}, lang: {lang}")
 
     if key.lower().endswith(".mp3"):
@@ -87,7 +88,7 @@ async def upload_file(request: Request):
         return response.json({"error": "Unsupported file type"}, status=400)
 
     url = create_presigned_url('get_object', key)
-    operation_id = create_recognition_task(url, container_type, lang, rate)
+    operation_id = create_recognition_task(url, container_type, lang, rate, summary_instruction)
 
     if not operation_id:
         return response.json({"error": "Failed to create recognition task"}, status=500)
@@ -208,7 +209,7 @@ def _create_grpc_channel():
     return channel, metadata
 
 # Function - Create recognition task via v3 gRPC AsyncRecognizer.RecognizeFile
-def create_recognition_task(presigned_url, container_type, lang, rate=48000):
+def create_recognition_task(presigned_url, container_type, lang, rate=48000, summary_instruction=''):
     channel, metadata = _create_grpc_channel()
     stub = stt_service_pb2_grpc.AsyncRecognizerStub(channel)
 
@@ -248,12 +249,12 @@ def create_recognition_task(presigned_url, container_type, lang, rate=48000):
     )
 
     summarization = None
-    if config['model_uri']:
+    if config['model_uri'] and summary_instruction:
         summarization = stt_pb2.SummarizationOptions(
             model_uri=config['model_uri'],
             properties=[
                 stt_pb2.SummarizationProperty(
-                    instruction="Summarize this conversation briefly, highlighting the key points and outcome."
+                    instruction=summary_instruction
                 ),
             ]
         )

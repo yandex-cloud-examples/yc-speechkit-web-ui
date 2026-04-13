@@ -218,6 +218,52 @@
         .dialogue-clearfix {
             clear: both;
         }
+        .analysis-section {
+            display: none;
+            margin-top: 10px;
+        }
+        .analysis-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+        .analysis-card h6 {
+            margin: 0 0 8px 0;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .analysis-table th,
+        .analysis-table td {
+            text-align: left;
+            padding: 4px 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .analysis-table th {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        .analysis-table td {
+            color: #333;
+        }
+        .interrupts-list {
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        .interrupts-list .interrupt-item {
+            background: #fff3cd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            display: inline-block;
+            margin-right: 4px;
+        }
     </style>
 </head>
 <body>
@@ -321,6 +367,18 @@
             <h6>Dialogue</h6>
             <div id="dialogueSection" class="dialogue-container"></div>
             
+            <h6>
+                Speaker Analysis
+                <button id="toggleSpeakerBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="speakerAnalysisSection" class="analysis-section"></div>
+            
+            <h6>
+                Conversation Analysis
+                <button id="toggleConversationBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="conversationAnalysisSection" class="analysis-section"></div>
+
             <h6>
                 Raw JSON
                 <button id="toggleJsonBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>

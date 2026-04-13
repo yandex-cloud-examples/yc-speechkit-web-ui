@@ -106,14 +106,16 @@ async def operation_status(request):
         return response.json({"message": "Operation in progress", "operation": operation_id, "done": "false"})
     
     # Operation is done — fetch results via v3 GetRecognition gRPC
-    results = get_recognition_results(operation_id)
+    results, speaker_analysis_list, conversation_analysis_data = get_recognition_results(operation_id)
 
     complete_data = {
         "message": "Operation is complete",
         "operation": operation_id,
         "done": "true",
         "result": {
-            "chunks": results
+            "chunks": results,
+            "speakerAnalysis": speaker_analysis_list,
+            "conversationAnalysis": conversation_analysis_data
         }
     }
 
@@ -238,9 +240,15 @@ def create_recognition_task(presigned_url, container_type, lang, rate=48000):
     if language_restriction:
         recognition_model.language_restriction.CopyFrom(language_restriction)
 
+    speech_analysis = stt_pb2.SpeechAnalysisOptions(
+        enable_speaker_analysis=True,
+        enable_conversation_analysis=True,
+    )
+
     recognize_request = stt_pb2.RecognizeFileRequest(
         uri=presigned_url,
         recognition_model=recognition_model,
+        speech_analysis=speech_analysis,
     )
 
     try:
@@ -260,14 +268,16 @@ def get_recognition_results(operation_id):
     request = stt_service_pb2.GetRecognitionRequest(operation_id=operation_id)
 
     results = []
+    speaker_analysis_list = []
+    conversation_analysis_data = None
+
     try:
         logging.info("Fetching recognition results for operation: {}".format(operation_id))
         for response_msg in stub.GetRecognition(request, metadata=metadata):
             # Convert each StreamingResponse to a dict
             chunk = MessageToDict(response_msg, preserving_proto_field_name=True)
 
-            # Extract channel tag and alternatives from final_refinement or final
-            entry = {}
+            # Extract channel tag and alternatives from final_refinement
             channel_tag = chunk.get('channel_tag', '')
 
             if 'final_refinement' in chunk:
@@ -278,14 +288,21 @@ def get_recognition_results(operation_id):
                         'channelTag': channel_tag,
                         'alternatives': [{'text': alt.get('text', '')} for alt in alternatives]
                     }
+                    if entry:
+                        results.append(entry)
 
-            if entry:
-                results.append(entry)
+            # Capture speaker analysis events
+            if 'speaker_analysis' in chunk:
+                speaker_analysis_list.append(chunk['speaker_analysis'])
+
+            # Capture conversation analysis event (last one wins)
+            if 'conversation_analysis' in chunk:
+                conversation_analysis_data = chunk['conversation_analysis']
 
     except grpc.RpcError as e:
         logging.error(f"gRPC GetRecognition failed: code={e.code()}, details={e.details()}")
 
-    return results
+    return results, speaker_analysis_list, conversation_analysis_data
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ['PORT']), motd=False, access_log=False)

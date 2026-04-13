@@ -382,6 +382,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Toggle Speaker Analysis visibility
+    document.getElementById('toggleSpeakerBtn').addEventListener('click', function() {
+        const section = document.getElementById('speakerAnalysisSection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
+    });
+    
+    // Toggle Conversation Analysis visibility
+    document.getElementById('toggleConversationBtn').addEventListener('click', function() {
+        const section = document.getElementById('conversationAnalysisSection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
+    });
+    
     // STT file input handling
     document.getElementById('fileInput').addEventListener('change', function() {
         var file = this.files[0];
@@ -407,6 +431,12 @@ document.addEventListener('DOMContentLoaded', function() {
         
         document.getElementById('resultStt').innerHTML = '';
         document.getElementById('dialogueSection').innerHTML = '';
+        document.getElementById('speakerAnalysisSection').innerHTML = '';
+        document.getElementById('conversationAnalysisSection').innerHTML = '';
+        document.getElementById('speakerAnalysisSection').style.display = 'none';
+        document.getElementById('conversationAnalysisSection').style.display = 'none';
+        document.getElementById('toggleSpeakerBtn').textContent = 'Show';
+        document.getElementById('toggleConversationBtn').textContent = 'Show';
         
         // Presigning URL
         var encodedFilename = encodeURIComponent(fileName);
@@ -526,6 +556,172 @@ function checkOperationStatus(operationId) {
                         clearfix.className = 'dialogue-clearfix';
                         dialogueSection.appendChild(clearfix);
                     });
+
+                    // Render Speaker Analysis
+                    const speakerAnalysis = response.result.speakerAnalysis;
+                    const speakerSection = document.getElementById('speakerAnalysisSection');
+                    speakerSection.innerHTML = '';
+                    
+                    if (speakerAnalysis && speakerAnalysis.length > 0) {
+                        speakerAnalysis.forEach(function(sa) {
+                            const card = document.createElement('div');
+                            card.className = 'analysis-card';
+                            
+                            const title = document.createElement('h6');
+                            title.textContent = 'Speaker: ' + (sa.speaker_tag || 'Unknown');
+                            card.appendChild(title);
+                            
+                            const table = document.createElement('table');
+                            table.className = 'analysis-table';
+                            
+                            function addRow(label, value) {
+                                const tr = document.createElement('tr');
+                                const th = document.createElement('th');
+                                th.textContent = label;
+                                const td = document.createElement('td');
+                                td.textContent = value;
+                                tr.appendChild(th);
+                                tr.appendChild(td);
+                                table.appendChild(tr);
+                            }
+                            
+                            function formatMs(ms) {
+                                if (ms === undefined || ms === null) return '—';
+                                var seconds = (parseInt(ms) / 1000).toFixed(1);
+                                return seconds + 's';
+                            }
+                            
+                            function formatRatio(ratio) {
+                                if (ratio === undefined || ratio === null) return '—';
+                                return (parseFloat(ratio) * 100).toFixed(1) + '%';
+                            }
+                            
+                            function formatStat(stat) {
+                                if (!stat) return '—';
+                                return 'mean: ' + (parseFloat(stat.mean || 0)).toFixed(2) +
+                                       ', min: ' + (parseFloat(stat.min || 0)).toFixed(2) +
+                                       ', max: ' + (parseFloat(stat.max || 0)).toFixed(2);
+                            }
+                            
+                            addRow('Total Speech', formatMs(sa.total_speech_ms));
+                            addRow('Speech Ratio', formatRatio(sa.speech_ratio));
+                            addRow('Total Silence', formatMs(sa.total_silence_ms));
+                            addRow('Silence Ratio', formatRatio(sa.silence_ratio));
+                            addRow('Words Count', sa.words_count || '0');
+                            addRow('Letters Count', sa.letters_count || '0');
+                            addRow('Utterance Count', sa.utterance_count || '0');
+                            addRow('Words/sec', formatStat(sa.words_per_second));
+                            addRow('Letters/sec', formatStat(sa.letters_per_second));
+                            addRow('Words/utterance', formatStat(sa.words_per_utterance));
+                            addRow('Letters/utterance', formatStat(sa.letters_per_utterance));
+                            addRow('Utterance Duration', formatStat(sa.utterance_duration_estimation));
+                            
+                            if (sa.speech_boundaries) {
+                                addRow('Speech Start', formatMs(sa.speech_boundaries.start_time_ms));
+                                addRow('Speech End', formatMs(sa.speech_boundaries.end_time_ms));
+                            }
+                            
+                            card.appendChild(table);
+                            speakerSection.appendChild(card);
+                        });
+                    } else {
+                        speakerSection.innerHTML = '<div class="analysis-card">No speaker analysis data available.</div>';
+                    }
+                    
+                    // Render Conversation Analysis
+                    const convAnalysis = response.result.conversationAnalysis;
+                    const convSection = document.getElementById('conversationAnalysisSection');
+                    convSection.innerHTML = '';
+                    
+                    if (convAnalysis) {
+                        const card = document.createElement('div');
+                        card.className = 'analysis-card';
+                        
+                        const table = document.createElement('table');
+                        table.className = 'analysis-table';
+                        
+                        function addConvRow(label, value) {
+                            const tr = document.createElement('tr');
+                            const th = document.createElement('th');
+                            th.textContent = label;
+                            const td = document.createElement('td');
+                            td.textContent = value;
+                            tr.appendChild(th);
+                            tr.appendChild(td);
+                            table.appendChild(tr);
+                        }
+                        
+                        function fmtMs(ms) {
+                            if (ms === undefined || ms === null) return '—';
+                            return (parseInt(ms) / 1000).toFixed(1) + 's';
+                        }
+                        
+                        function fmtRatio(ratio) {
+                            if (ratio === undefined || ratio === null) return '—';
+                            return (parseFloat(ratio) * 100).toFixed(1) + '%';
+                        }
+                        
+                        function fmtStat(stat) {
+                            if (!stat) return '—';
+                            return 'mean: ' + (parseFloat(stat.mean || 0)).toFixed(2) +
+                                   ', min: ' + (parseFloat(stat.min || 0)).toFixed(2) +
+                                   ', max: ' + (parseFloat(stat.max || 0)).toFixed(2);
+                        }
+                        
+                        if (convAnalysis.conversation_boundaries) {
+                            addConvRow('Conversation Start', fmtMs(convAnalysis.conversation_boundaries.start_time_ms));
+                            addConvRow('Conversation End', fmtMs(convAnalysis.conversation_boundaries.end_time_ms));
+                        }
+                        
+                        addConvRow('Total Speech Duration', fmtMs(convAnalysis.total_speech_duration_ms));
+                        addConvRow('Total Speech Ratio', fmtRatio(convAnalysis.total_speech_ratio));
+                        addConvRow('Simultaneous Silence', fmtMs(convAnalysis.total_simultaneous_silence_duration_ms));
+                        addConvRow('Simultaneous Silence Ratio', fmtRatio(convAnalysis.total_simultaneous_silence_ratio));
+                        addConvRow('Silence Duration Stats', fmtStat(convAnalysis.simultaneous_silence_duration_estimation));
+                        addConvRow('Simultaneous Speech', fmtMs(convAnalysis.total_simultaneous_speech_duration_ms));
+                        addConvRow('Simultaneous Speech Ratio', fmtRatio(convAnalysis.total_simultaneous_speech_ratio));
+                        addConvRow('Speech Duration Stats', fmtStat(convAnalysis.simultaneous_speech_duration_estimation));
+                        
+                        card.appendChild(table);
+                        
+                        // Render interrupts per speaker
+                        if (convAnalysis.speaker_interrupts && convAnalysis.speaker_interrupts.length > 0) {
+                            convAnalysis.speaker_interrupts.forEach(function(si) {
+                                const intCard = document.createElement('div');
+                                intCard.style.marginTop = '10px';
+                                
+                                const intTitle = document.createElement('h6');
+                                intTitle.textContent = 'Interrupts by ' + (si.speaker_tag || 'Unknown');
+                                intTitle.style.fontSize = '0.85rem';
+                                intTitle.style.marginBottom = '4px';
+                                intCard.appendChild(intTitle);
+                                
+                                const intInfo = document.createElement('div');
+                                intInfo.className = 'interrupts-list';
+                                intInfo.innerHTML = 'Count: <strong>' + (si.interrupts_count || 0) +
+                                    '</strong> &nbsp;|&nbsp; Total duration: <strong>' + fmtMs(si.interrupts_duration_ms) + '</strong>';
+                                intCard.appendChild(intInfo);
+                                
+                                if (si.interrupts && si.interrupts.length > 0) {
+                                    const intList = document.createElement('div');
+                                    intList.className = 'interrupts-list';
+                                    si.interrupts.forEach(function(seg) {
+                                        const span = document.createElement('span');
+                                        span.className = 'interrupt-item';
+                                        span.textContent = fmtMs(seg.start_time_ms) + ' → ' + fmtMs(seg.end_time_ms);
+                                        intList.appendChild(span);
+                                    });
+                                    intCard.appendChild(intList);
+                                }
+                                
+                                card.appendChild(intCard);
+                            });
+                        }
+                        
+                        convSection.appendChild(card);
+                    } else {
+                        convSection.innerHTML = '<div class="analysis-card">No conversation analysis data available.</div>';
+                    }
                 } else {
                     setTimeout(checkStatus, 5000);
                 }

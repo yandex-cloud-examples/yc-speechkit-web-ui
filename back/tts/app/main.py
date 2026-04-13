@@ -4,10 +4,7 @@ import io
 import json
 import logging
 import os
-import pydub
 import uuid
-
-from datetime import datetime
 
 from botocore.exceptions import ClientError
 
@@ -45,6 +42,13 @@ CORS(app)
 async def after_server_start(app, loop):
     print(f"App listening at port {os.environ['PORT']}")
 
+# Format mapping
+FORMAT_MAP = {
+    'WAV':      {'container': tts_pb2.ContainerAudio.WAV,      'ext': 'wav'},
+    'OGG_OPUS': {'container': tts_pb2.ContainerAudio.OGG_OPUS, 'ext': 'ogg'},
+    'MP3':      {'container': tts_pb2.ContainerAudio.MP3,       'ext': 'mp3'},
+}
+
 @app.post("/tts")
 async def start(request):
     request_json = request.json
@@ -55,16 +59,19 @@ async def start(request):
     role_value        = request_json.get("role", "good")
     speed_value_raw   = request_json.get("speed")
     speed_value       = check_speed(speed_value_raw)
+    format_value      = request_json.get("format", "WAV").upper()
     unsafe_mode_value = request_json.get("unsafe", False)
 
-    audio = synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_value)
+    fmt = FORMAT_MAP.get(format_value, FORMAT_MAP['WAV'])
 
-    filename = f"audio-{uuid.uuid4()}.wav"
+    audio_bytes = synthesize(text_value, voice_value, role_value, speed_value, fmt['container'], unsafe_mode_value)
+
+    filename = f"audio-{uuid.uuid4()}.{fmt['ext']}"
 
     with open(f"/app/{filename}", 'wb') as fp:
-        audio.export(fp, format='wav')
+        fp.write(audio_bytes)
     
-    status = upload_file_to_s3(f"/app/{filename}",f"audio/{filename}")
+    status = upload_file_to_s3(f"/app/{filename}", f"audio/{filename}")
     print("status {}".format(status))
 
     if (status):
@@ -93,39 +100,26 @@ def check_speed(input_value):
         return 1.1
 
 # Function - Synthesize
-def synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_value) -> pydub.AudioSegment: 
+def synthesize(text_value, voice_value, role_value, speed_value, container_audio_type, unsafe_mode_value) -> bytes: 
 
-    if role_value == "none":
-        request = tts_pb2.UtteranceSynthesisRequest(
-            text=text_value,
-            output_audio_spec=tts_pb2.AudioFormatOptions(
-                container_audio=tts_pb2.ContainerAudio(
-                    container_audio_type=tts_pb2.ContainerAudio.WAV
-                )
-            ),
-            hints=[
-            tts_pb2.Hints(voice = voice_value),
-            tts_pb2.Hints(speed = speed_value),
-            ],
-            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
-            unsafe_mode=unsafe_mode_value
-        )
-    else:
-        request = tts_pb2.UtteranceSynthesisRequest(
-            text=text_value,
-            output_audio_spec=tts_pb2.AudioFormatOptions(
-                container_audio=tts_pb2.ContainerAudio(
-                    container_audio_type=tts_pb2.ContainerAudio.WAV
-                )
-            ),
-            hints=[
-            tts_pb2.Hints(voice = voice_value),
-            tts_pb2.Hints(role  = role_value),
-            tts_pb2.Hints(speed = speed_value),
-            ],
-            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
-            unsafe_mode=unsafe_mode_value
-        )
+    hints = [
+        tts_pb2.Hints(voice=voice_value),
+        tts_pb2.Hints(speed=speed_value),
+    ]
+    if role_value != "none":
+        hints.append(tts_pb2.Hints(role=role_value))
+
+    request = tts_pb2.UtteranceSynthesisRequest(
+        text=text_value,
+        output_audio_spec=tts_pb2.AudioFormatOptions(
+            container_audio=tts_pb2.ContainerAudio(
+                container_audio_type=container_audio_type
+            )
+        ),
+        hints=hints,
+        loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
+        unsafe_mode=unsafe_mode_value
+    )
 
     cred = grpc.ssl_channel_credentials()
     channel = grpc.secure_channel(config['request_api'], cred)
@@ -142,8 +136,7 @@ def synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_val
         audio = io.BytesIO()
         for response in it:
             audio.write(response.audio_chunk.data)
-        audio.seek(0)
-        return pydub.AudioSegment.from_wav(audio)
+        return audio.getvalue()
     except grpc._channel._Rendezvous as err:
         print(f'Error code {err._state.code}, message: {err._state.details}')
         raise err

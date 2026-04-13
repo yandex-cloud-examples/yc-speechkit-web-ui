@@ -86,7 +86,7 @@ Not Implemented ❌
  audio_template          Audio template synthesis — provide reference audio + text template + AudioVariable markers for variable segments
  model                   Model name field (used for Brand Voice Lite / Brand Voice Call Center)
  MAX_PEAK normalization  We hardcode LUFS; user can't choose MAX_PEAK
- OGG_OPUS / MP3 output   We hardcode WAV output; API also supports OGG_OPUS and MP3 containers
+ OGG_OPUS / MP3 output   ✅ User can select WAV, OGG_OPUS, or MP3 output format
  StreamSynthesis         Bidirectional streaming RPC — send text chunks incrementally, receive audio chunks in real-time
 
 

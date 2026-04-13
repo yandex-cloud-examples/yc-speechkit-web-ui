@@ -40,6 +40,7 @@ const defaultRole = 'neutral';
 let currentVoice = '';
 let currentRole = '';
 let currentSpeed = '';
+let currentFormat = 'WAV';
 let currentUnsafeMode = false;
 
 // Add CSS for dropdowns
@@ -112,6 +113,24 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('speedsDropdownContent').classList.toggle('show');
     });
     
+    document.getElementById('formatDropdown').addEventListener('click', function() {
+        document.getElementById('formatDropdownContent').classList.toggle('show');
+    });
+    
+    // Populate format dropdown
+    const formatOptions = ['WAV', 'OGG_OPUS', 'MP3'];
+    const formatDropdownContent = document.getElementById('formatDropdownContent');
+    formatOptions.forEach(function(fmt) {
+        const item = document.createElement('a');
+        item.textContent = fmt;
+        item.onclick = function() {
+            currentFormat = fmt;
+            document.getElementById('formatDropdown').textContent = fmt;
+            formatDropdownContent.classList.remove('show');
+        };
+        formatDropdownContent.appendChild(item);
+    });
+    
     // Close dropdowns when clicking outside
     window.addEventListener('click', function(event) {
         if (!event.target.matches('#voicesDropdown')) {
@@ -128,6 +147,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         if (!event.target.matches('#speedsDropdown')) {
             const dropdown = document.getElementById('speedsDropdownContent');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        }
+        if (!event.target.matches('#formatDropdown')) {
+            const dropdown = document.getElementById('formatDropdownContent');
             if (dropdown.classList.contains('show')) {
                 dropdown.classList.remove('show');
             }
@@ -311,6 +336,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 voice: currentVoice,
                 role: currentRole,
                 speed: currentSpeed,
+                format: currentFormat,
                 unsafe: currentUnsafeMode
             }),
         })
@@ -338,7 +364,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     downloadButton.onclick = function() {
                         var link = document.createElement('a');
                         link.href = audioUrl;
-                        link.download = 'audio.wav';
+                        var ext = currentFormat === 'OGG_OPUS' ? 'ogg' : currentFormat.toLowerCase();
+                        link.download = 'audio.' + ext;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);

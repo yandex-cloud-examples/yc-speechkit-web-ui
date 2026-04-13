@@ -515,14 +515,9 @@ function checkOperationStatus(operationId) {
                         const bubble = document.createElement('div');
                         bubble.className = 'dialogue-bubble ' + side;
                         
-                        const label = document.createElement('div');
-                        label.className = 'dialogue-label';
-                        label.textContent = 'Channel ' + chunk.channelTag;
-                        
                         const content = document.createElement('div');
                         content.textContent = text;
                         
-                        bubble.appendChild(label);
                         bubble.appendChild(content);
                         dialogueSection.appendChild(bubble);
                         

@@ -285,10 +285,15 @@
                 </button>
             </form>
             
-            <h6>Raw JSON</h6>
-            <div class="result-container">
-                <div id="resultStt" class="bg-light text-monospace text-break"></div>
-                <button class="copy-btn" id="copyJsonBtn">Copy</button>
+            <h6>
+                Raw JSON
+                <button id="toggleJsonBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="rawJsonSection" style="display: none;">
+                <div class="result-container">
+                    <div id="resultStt" class="bg-light text-monospace text-break"></div>
+                    <button class="copy-btn" id="copyJsonBtn">Copy</button>
+                </div>
             </div>
             
             <h6>Channel Tag 1</h6>

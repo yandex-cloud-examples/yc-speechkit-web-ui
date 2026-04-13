@@ -396,6 +396,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }.bind(this));
     });
     
+    // Toggle Raw JSON visibility
+    document.getElementById('toggleJsonBtn').addEventListener('click', function() {
+        const section = document.getElementById('rawJsonSection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
+    });
+    
     // STT file input handling
     document.getElementById('fileInput').addEventListener('change', function() {
         var file = this.files[0];

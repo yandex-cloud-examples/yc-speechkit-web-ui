@@ -370,32 +370,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }.bind(this));
     });
     
-    document.getElementById('copyChannel1Btn').addEventListener('click', function() {
-        const resultDiv = document.getElementById('resultSttTagOne');
-        const textToCopy = resultDiv.textContent;
-        
-        navigator.clipboard.writeText(textToCopy).then(function() {
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            setTimeout(() => {
-                this.textContent = originalText;
-            }, 1500);
-        }.bind(this));
-    });
-    
-    document.getElementById('copyChannel2Btn').addEventListener('click', function() {
-        const resultDiv = document.getElementById('resultSttTagTwo');
-        const textToCopy = resultDiv.textContent;
-        
-        navigator.clipboard.writeText(textToCopy).then(function() {
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            setTimeout(() => {
-                this.textContent = originalText;
-            }, 1500);
-        }.bind(this));
-    });
-    
     // Toggle Raw JSON visibility
     document.getElementById('toggleJsonBtn').addEventListener('click', function() {
         const section = document.getElementById('rawJsonSection');
@@ -432,8 +406,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('sendButtonStt').style.display = 'none';
         
         document.getElementById('resultStt').innerHTML = '';
-        document.getElementById('resultSttTagOne').innerHTML = '';
-        document.getElementById('resultSttTagTwo').innerHTML = '';
+        document.getElementById('dialogueSection').innerHTML = '';
         
         // Presigning URL
         var encodedFilename = encodeURIComponent(fileName);
@@ -521,38 +494,43 @@ function checkOperationStatus(operationId) {
                     newParagraphStt.innerHTML = highlighted;
                     resultSttDiv.appendChild(newParagraphStt);
                     
-                    // Process channel data
+                    // Process channel data as dialogue
                     let result = response.result.chunks;
-                    let textForChannel1 = "";
-                    let textForChannel2 = "";
+                    const dialogueSection = document.getElementById('dialogueSection');
+                    dialogueSection.innerHTML = '';
+                    
+                    // Determine the first channel tag to assign it as "left"
+                    let leftTag = null;
+                    if (result.length > 0) {
+                        leftTag = result[0].channelTag;
+                    }
                     
                     result.forEach(chunk => {
-                        chunk.alternatives.forEach(alternative => {
-                            if (chunk.channelTag === "1") {
-                                textForChannel1 += alternative.text + "\n";
-                            } else if (chunk.channelTag === "2") {
-                                textForChannel2 += alternative.text + "\n";
-                            }
-                        });
+                        const text = chunk.alternatives.map(a => a.text).join(' ');
+                        if (!text.trim()) return;
+                        
+                        const isLeft = (chunk.channelTag === leftTag);
+                        const side = isLeft ? 'left' : 'right';
+                        
+                        const bubble = document.createElement('div');
+                        bubble.className = 'dialogue-bubble ' + side;
+                        
+                        const label = document.createElement('div');
+                        label.className = 'dialogue-label';
+                        label.textContent = 'Channel ' + chunk.channelTag;
+                        
+                        const content = document.createElement('div');
+                        content.textContent = text;
+                        
+                        bubble.appendChild(label);
+                        bubble.appendChild(content);
+                        dialogueSection.appendChild(bubble);
+                        
+                        // Clearfix after each bubble
+                        const clearfix = document.createElement('div');
+                        clearfix.className = 'dialogue-clearfix';
+                        dialogueSection.appendChild(clearfix);
                     });
-                    
-                    let htmlTextForChannel1 = textForChannel1.replace(/\n/g, '<br>');
-                    let htmlTextForChannel2 = textForChannel2.replace(/\n/g, '<br>');
-                    
-                    const resultSttDivChannel1 = document.getElementById('resultSttTagOne');
-                    const resultSttDivChannel2 = document.getElementById('resultSttTagTwo');
-                    
-                    if (htmlTextForChannel1) {
-                        let p1 = document.createElement('p');
-                        p1.innerHTML = htmlTextForChannel1;
-                        resultSttDivChannel1.appendChild(p1);
-                    }
-                    
-                    if (htmlTextForChannel2) {
-                        let p2 = document.createElement('p');
-                        p2.innerHTML = htmlTextForChannel2;
-                        resultSttDivChannel2.appendChild(p2);
-                    }
                 } else {
                     setTimeout(checkStatus, 5000);
                 }

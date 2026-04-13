@@ -185,6 +185,45 @@
         .json-null {
             color: #1A1AA6;
         }
+        .dialogue-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .dialogue-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            word-break: break-word;
+            clear: both;
+        }
+        .dialogue-bubble.left {
+            background: #e3e8ed;
+            color: #333;
+            float: left;
+            border-bottom-left-radius: 2px;
+        }
+        .dialogue-bubble.right {
+            background: #3498db;
+            color: white;
+            float: right;
+            border-bottom-right-radius: 2px;
+        }
+        .dialogue-label {
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-bottom: 2px;
+            opacity: 0.7;
+        }
+        .dialogue-clearfix {
+            clear: both;
+        }
     </style>
 </head>
 <body>
@@ -296,17 +335,8 @@
                 </div>
             </div>
             
-            <h6>Channel Tag 1</h6>
-            <div class="result-container">
-                <div id="resultSttTagOne" class="bg-light text-monospace text-break"></div>
-                <button class="copy-btn" id="copyChannel1Btn">Copy</button>
-            </div>
-            
-            <h6>Channel Tag 2</h6>
-            <div class="result-container">
-                <div id="resultSttTagTwo" class="bg-light text-monospace text-break"></div>
-                <button class="copy-btn" id="copyChannel2Btn">Copy</button>
-            </div>
+            <h6>Dialogue</h6>
+            <div id="dialogueSection" class="dialogue-container"></div>
         </div>
     </div>
     

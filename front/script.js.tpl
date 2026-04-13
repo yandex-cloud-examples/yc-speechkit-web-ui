@@ -535,6 +535,13 @@ function checkOperationStatus(operationId) {
                         leftTag = result[0].channelTag;
                     }
                     
+                    // Sort chunks chronologically by start time
+                    result.sort(function(a, b) {
+                        var aTime = (a.alternatives && a.alternatives[0]) ? (a.alternatives[0].startTimeMs || 0) : 0;
+                        var bTime = (b.alternatives && b.alternatives[0]) ? (b.alternatives[0].startTimeMs || 0) : 0;
+                        return aTime - bTime;
+                    });
+
                     function formatTimestamp(ms) {
                         if (ms === undefined || ms === null || ms === 0) return '0:00.0';
                         var totalSeconds = parseInt(ms) / 1000;

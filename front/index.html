@@ -202,6 +202,7 @@
             line-height: 1.4;
             word-break: break-word;
             clear: both;
+            position: relative;
         }
         .dialogue-bubble.left {
             background: #e3e8ed;
@@ -214,6 +215,36 @@
             color: white;
             float: right;
             border-bottom-right-radius: 2px;
+        }
+        .bubble-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+            z-index: 10;
+            margin-bottom: 6px;
+            pointer-events: none;
+        }
+        .dialogue-bubble.right .bubble-tooltip {
+            left: auto;
+            right: 0;
+        }
+        .dialogue-bubble:hover .bubble-tooltip {
+            display: block;
+        }
+        .tooltip-row {
+            margin-bottom: 2px;
+        }
+        .tooltip-label {
+            color: #aaa;
+            margin-right: 4px;
         }
         .dialogue-clearfix {
             clear: both;

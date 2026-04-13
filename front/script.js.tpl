@@ -535,6 +535,15 @@ function checkOperationStatus(operationId) {
                         leftTag = result[0].channelTag;
                     }
                     
+                    function formatTimestamp(ms) {
+                        if (ms === undefined || ms === null || ms === 0) return '0:00.0';
+                        var totalSeconds = parseInt(ms) / 1000;
+                        var minutes = Math.floor(totalSeconds / 60);
+                        var seconds = (totalSeconds % 60).toFixed(1);
+                        if (seconds < 10) seconds = '0' + seconds;
+                        return minutes + ':' + seconds;
+                    }
+                    
                     result.forEach(chunk => {
                         const text = chunk.alternatives.map(a => a.text).join(' ');
                         if (!text.trim()) return;
@@ -545,10 +554,51 @@ function checkOperationStatus(operationId) {
                         const bubble = document.createElement('div');
                         bubble.className = 'dialogue-bubble ' + side;
                         
+                        // Build tooltip from first alternative
+                        const alt = chunk.alternatives[0];
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'bubble-tooltip';
+                        
+                        // Time row
+                        var timeRow = document.createElement('div');
+                        timeRow.className = 'tooltip-row';
+                        timeRow.innerHTML = '<span class="tooltip-label">Time:</span>' +
+                            formatTimestamp(alt.startTimeMs) + ' – ' + formatTimestamp(alt.endTimeMs);
+                        tooltip.appendChild(timeRow);
+                        
+                        // Words count row
+                        var wordsRow = document.createElement('div');
+                        wordsRow.className = 'tooltip-row';
+                        var wordCount = (alt.words && alt.words.length) ? alt.words.length : 0;
+                        wordsRow.innerHTML = '<span class="tooltip-label">Words:</span>' + wordCount;
+                        tooltip.appendChild(wordsRow);
+                        
+                        // Confidence row
+                        if (alt.confidence) {
+                            var confRow = document.createElement('div');
+                            confRow.className = 'tooltip-row';
+                            confRow.innerHTML = '<span class="tooltip-label">Confidence:</span>' +
+                                (parseFloat(alt.confidence) * 100).toFixed(1) + '%';
+                            tooltip.appendChild(confRow);
+                        }
+                        
+                        // Language row
+                        if (alt.languages && alt.languages.length > 0) {
+                            var langRow = document.createElement('div');
+                            langRow.className = 'tooltip-row';
+                            var langParts = alt.languages.map(function(l) {
+                                return l.language_code + ' (' + (parseFloat(l.probability) * 100).toFixed(1) + '%)';
+                            });
+                            langRow.innerHTML = '<span class="tooltip-label">Language:</span>' + langParts.join(', ');
+                            tooltip.appendChild(langRow);
+                        }
+                        
+                        bubble.appendChild(tooltip);
+                        
                         const content = document.createElement('div');
                         content.textContent = text;
-                        
                         bubble.appendChild(content);
+                        
                         dialogueSection.appendChild(bubble);
                         
                         // Clearfix after each bubble

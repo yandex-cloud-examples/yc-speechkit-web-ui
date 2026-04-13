@@ -286,7 +286,14 @@ def get_recognition_results(operation_id):
                     alternatives = refinement['normalized_text'].get('alternatives', [])
                     entry = {
                         'channelTag': channel_tag,
-                        'alternatives': [{'text': alt.get('text', '')} for alt in alternatives]
+                        'alternatives': [{
+                            'text': alt.get('text', ''),
+                            'words': alt.get('words', []),
+                            'confidence': alt.get('confidence', 0),
+                            'languages': alt.get('languages', []),
+                            'startTimeMs': alt.get('start_time_ms', 0),
+                            'endTimeMs': alt.get('end_time_ms', 0),
+                        } for alt in alternatives]
                     }
                     if entry:
                         results.append(entry)

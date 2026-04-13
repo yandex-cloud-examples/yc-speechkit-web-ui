@@ -20,6 +20,12 @@ resource "yandex_resourcemanager_folder_iam_member" "sa-stt-user" {
   role            = "ai.speechkit-stt.user"
 }
 
+resource "yandex_resourcemanager_folder_iam_member" "sa-llm-user" {
+  folder_id       = var.folder_id
+  member          = "serviceAccount:${yandex_iam_service_account.main.id}"
+  role            = "ai.languageModels.user"
+}
+
 resource "yandex_resourcemanager_folder_iam_member" "sa-tts-user" {
   folder_id       = var.folder_id
   member          = "serviceAccount:${yandex_iam_service_account.main.id}"

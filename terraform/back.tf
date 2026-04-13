@@ -64,10 +64,10 @@ resource "yandex_serverless_container" "stt" {
   }
 
   image {
-      url = "cr.yandex/crpa6b3re4pr2jpg3j34/speechkit-workbench/stt-service:1.0.37"
+      url = "cr.yandex/crpa6b3re4pr2jpg3j34/speechkit-workbench/stt-service:1.0.39"
       environment = {
           S3_BUCKET = yandex_storage_bucket.front.bucket
-          MODEL_URI = "gpt://${var.folder_id}/yandexgpt/latest"
+          MODEL_URI = "gpt://${var.folder_id}/yandexgpt-5.1"
       }
   }
 }

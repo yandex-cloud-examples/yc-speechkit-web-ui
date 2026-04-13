@@ -406,6 +406,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
+    // Toggle Summary visibility
+    document.getElementById('toggleSummaryBtn').addEventListener('click', function() {
+        const section = document.getElementById('summarySection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
+    });
+    
     // STT file input handling
     document.getElementById('fileInput').addEventListener('change', function() {
         var file = this.files[0];
@@ -437,6 +449,9 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('conversationAnalysisSection').style.display = 'none';
         document.getElementById('toggleSpeakerBtn').textContent = 'Show';
         document.getElementById('toggleConversationBtn').textContent = 'Show';
+        document.getElementById('summarySection').innerHTML = '';
+        document.getElementById('summarySection').style.display = 'none';
+        document.getElementById('toggleSummaryBtn').textContent = 'Show';
         
         // Presigning URL
         var encodedFilename = encodeURIComponent(fileName);
@@ -778,6 +793,43 @@ function checkOperationStatus(operationId) {
                         convSection.appendChild(card);
                     } else {
                         convSection.innerHTML = '<div class="analysis-card">No conversation analysis data available.</div>';
+                    }
+
+                    // Render Summarization
+                    const summaryData = response.result.summarization;
+                    const summarySection = document.getElementById('summarySection');
+                    summarySection.innerHTML = '';
+                    
+                    if (summaryData && summaryData.results && summaryData.results.length > 0) {
+                        const card = document.createElement('div');
+                        card.className = 'analysis-card';
+                        
+                        summaryData.results.forEach(function(item) {
+                            const p = document.createElement('p');
+                            p.style.margin = '0 0 8px 0';
+                            p.style.fontSize = '0.85rem';
+                            p.style.lineHeight = '1.5';
+                            p.textContent = item.response || '';
+                            card.appendChild(p);
+                        });
+                        
+                        if (summaryData.content_usage) {
+                            const usage = document.createElement('div');
+                            usage.style.fontSize = '0.75rem';
+                            usage.style.color = '#7f8c8d';
+                            usage.style.marginTop = '8px';
+                            usage.style.borderTop = '1px solid #eee';
+                            usage.style.paddingTop = '6px';
+                            usage.textContent = 'Tokens: ' +
+                                (summaryData.content_usage.input_text_tokens || 0) + ' input, ' +
+                                (summaryData.content_usage.completion_tokens || 0) + ' completion, ' +
+                                (summaryData.content_usage.total_tokens || 0) + ' total';
+                            card.appendChild(usage);
+                        }
+                        
+                        summarySection.appendChild(card);
+                    } else {
+                        summarySection.innerHTML = '<div class="analysis-card">No summarization data available.</div>';
                     }
                 } else {
                     setTimeout(checkStatus, 5000);

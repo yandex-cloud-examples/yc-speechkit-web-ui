@@ -26,7 +26,8 @@ config = {
     's3_bucket'       : os.environ['S3_BUCKET'],
     's3_key'          : os.environ['S3_KEY'],
     's3_secret'       : os.environ['S3_SECRET'],
-    'api_key_secret'  : os.environ['API_SECRET']
+    'api_key_secret'  : os.environ['API_SECRET'],
+    'model_uri'       : os.environ.get('MODEL_URI', '')
 }
 
 suffixes = (".mp3", ".wav", ".ogg")
@@ -106,7 +107,7 @@ async def operation_status(request):
         return response.json({"message": "Operation in progress", "operation": operation_id, "done": "false"})
     
     # Operation is done — fetch results via v3 GetRecognition gRPC
-    results, speaker_analysis_list, conversation_analysis_data = get_recognition_results(operation_id)
+    results, speaker_analysis_list, conversation_analysis_data, summarization_data = get_recognition_results(operation_id)
 
     complete_data = {
         "message": "Operation is complete",
@@ -115,7 +116,8 @@ async def operation_status(request):
         "result": {
             "chunks": results,
             "speakerAnalysis": speaker_analysis_list,
-            "conversationAnalysis": conversation_analysis_data
+            "conversationAnalysis": conversation_analysis_data,
+            "summarization": summarization_data
         }
     }
 
@@ -245,11 +247,25 @@ def create_recognition_task(presigned_url, container_type, lang, rate=48000):
         enable_conversation_analysis=True,
     )
 
+    summarization = None
+    if config['model_uri']:
+        summarization = stt_pb2.SummarizationOptions(
+            model_uri=config['model_uri'],
+            properties=[
+                stt_pb2.SummarizationProperty(
+                    instruction="Summarize this conversation briefly, highlighting the key points and outcome."
+                ),
+            ]
+        )
+
     recognize_request = stt_pb2.RecognizeFileRequest(
         uri=presigned_url,
         recognition_model=recognition_model,
         speech_analysis=speech_analysis,
     )
+
+    if summarization:
+        recognize_request.summarization.CopyFrom(summarization)
 
     try:
         logging.info("Sending RecognizeFile request via gRPC v3")
@@ -270,6 +286,7 @@ def get_recognition_results(operation_id):
     results = []
     speaker_analysis_list = []
     conversation_analysis_data = None
+    summarization_data = None
 
     try:
         logging.info("Fetching recognition results for operation: {}".format(operation_id))
@@ -308,10 +325,13 @@ def get_recognition_results(operation_id):
             if 'conversation_analysis' in chunk:
                 conversation_analysis_data = chunk['conversation_analysis']
 
+            if 'summarization' in chunk:
+                summarization_data = chunk['summarization']
+
     except grpc.RpcError as e:
         logging.error(f"gRPC GetRecognition failed: code={e.code()}, details={e.details()}")
 
-    return results, speaker_analysis_list, conversation_analysis_data
+    return results, speaker_analysis_list, conversation_analysis_data, summarization_data
 
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ['PORT']), motd=False, access_log=False)

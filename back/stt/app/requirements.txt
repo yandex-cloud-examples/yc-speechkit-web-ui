@@ -1,5 +1,8 @@
 sanic
 sanic_cors
 boto3
-Werkzeug
+grpcio
+grpcio-tools
+protobuf
 requests
+yandex-cloud-sdk-proto

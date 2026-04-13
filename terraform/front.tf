@@ -1,7 +1,5 @@
 # Object storage bucket
 resource "yandex_storage_bucket" "front" {
-  access_key = yandex_iam_service_account_static_access_key.sa-static-key.access_key
-  secret_key = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
   bucket = "speechbench-${random_string.default.result}"
   acl    = "public-read"
 
@@ -17,11 +15,6 @@ resource "yandex_storage_bucket" "front" {
     expose_headers  = ["ETag"]
     max_age_seconds = 3000
   }
-
-  depends_on = [
-    yandex_iam_service_account_static_access_key.sa-static-key,
-    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
-  ]
 }
 
 resource "yandex_storage_object" "index" {
@@ -32,11 +25,6 @@ resource "yandex_storage_object" "index" {
   key    = "index.html"
   source = "../front/index.html"
   source_hash = filemd5("../front/index.html")
-
-  depends_on = [
-    yandex_iam_service_account_static_access_key.sa-static-key,
-    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
-  ]
 }
 
 resource "yandex_storage_object" "error" {
@@ -47,11 +35,6 @@ resource "yandex_storage_object" "error" {
   key    = "error.html"
   source = "../front/error.html"
   source_hash = filemd5("../front/error.html")
-
-  depends_on = [
-    yandex_iam_service_account_static_access_key.sa-static-key,
-    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
-  ]
 }
 
 resource "yandex_storage_object" "script" {
@@ -66,9 +49,4 @@ resource "yandex_storage_object" "script" {
       api_gw   = "https://${yandex_api_gateway.api-gw.domain}",
     }
   )
-
-  depends_on = [
-    yandex_iam_service_account_static_access_key.sa-static-key,
-    yandex_resourcemanager_folder_iam_member.sa-storage-editor,
-  ]
 }

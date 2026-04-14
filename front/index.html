@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>SpeechKit Workbench</title>
+    <title>SpeechKit Web UI</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -319,7 +319,7 @@
 </head>
 <body>
     <div class="container">
-        <h2>SpeechKit Workbench</h2>
+        <h2>SpeechKit Web UI</h2>
         
         <!-- Simple tabs -->
         <div class="tabs">
@@ -329,7 +329,7 @@
         
         <!-- Tab content -->
         <div class="tab-content active" id="textToSpeech">
-            <h5>Text-to-Speech</h5>
+            <h3>Синтез речи</h3>
             <textarea id="textInput" rows="3" maxlength="250"></textarea>
             <div id="charCount">0/250</div>
             
@@ -403,7 +403,7 @@
         </div>
         
         <div class="tab-content" id="speechToText">
-            <h5>Speech-to-Text</h5>
+            <h3>Распознавание аудиофайлов</h3>
             <form id="audioUploadForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="fileInput">Загрузка аудиофайла</label>
@@ -411,7 +411,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="languageSelect">Language</label>
+                    <label for="languageSelect">Язык</label>
                     <select id="languageSelect" name="lang">
                         <option value="ru-RU">Русский</option>
                         <option value="auto">Автоматически</option>
@@ -428,13 +428,13 @@
                 </div>
                 
                 <div class="form-group hidden" id="rateForm">
-                    <label for="sampleRateInput">Sample Rate (Hz)</label>
+                    <label for="sampleRateInput">Частота дискретизации (кГц)</label>
                     <input type="number" id="sampleRateInput" name="sampleRate" value="48000">
                 </div>
                 
                 <div class="form-group">
-                    <label for="summaryInstructionInput">Summary Instruction</label>
-                    <textarea id="summaryInstructionInput" name="summaryInstruction" rows="3" style="font-size: 0.85rem;">Summarize this conversation briefly, highlighting the key points and outcome.</textarea>
+                    <label for="summaryInstructionInput">Промпт модели</label>
+                    <textarea id="summaryInstructionInput" name="summaryInstruction" rows="3" style="font-size: 0.85rem;">Кратко суммируй следующий диалог. Выдели ключевые моменты обсуждения и итог.</textarea>
                 </div>
                 
                 <button id="sendButtonStt" type="submit">Отправить</button>
@@ -448,19 +448,19 @@
             <div id="dialogueSection" class="dialogue-container"></div>
             
             <h6>
-                Speaker Analysis
+                Статистика участников
                 <button id="toggleSpeakerBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
             </h6>
             <div id="speakerAnalysisSection" class="analysis-section"></div>
             
             <h6>
-                Conversation Analysis
+                Статистика диалога
                 <button id="toggleConversationBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
             </h6>
             <div id="conversationAnalysisSection" class="analysis-section"></div>
 
             <h6>
-                Summary
+                Результат обработки с помощью LLM
                 <button id="toggleSummaryBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
             </h6>
             <div id="summarySection" class="analysis-section"></div>

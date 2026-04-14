@@ -1,9 +1,9 @@
 # SpeechKit Web UI
 
 <img
-  src="images/web-ui.png"
-  alt="SpeechKit Workbench"
-  title="SpeechKit Workbench"
+  src="images/web-ui-tts.png"
+  alt="SpeechKit Web UI"
+  title="SpeechKit Web UI"
   style="display: inline-block; margin: 0 auto; max-width: 600px">
 
 Данный репозиторий содержит пример веб-приложения, которое обращается к сервису [Yandex SpeechKit](https://cloud.yandex.com/ru/services/speechkit) и отображает его результат в веб-интерфейсе.
@@ -20,8 +20,8 @@
 
 <img
   src="images/diagram.png"
-  alt="SpeechKit Workbench"
-  title="SpeechKit Workbench"
+  alt="SpeechKit Web UI"
+  title="SpeechKit Web UI"
   style="display: inline-block; margin: 0 auto; max-width: 400px">
 
 ## Описание модуля

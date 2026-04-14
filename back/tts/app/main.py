@@ -49,6 +49,12 @@ FORMAT_MAP = {
     'MP3':      {'container': tts_pb2.ContainerAudio.MP3,       'ext': 'mp3'},
 }
 
+# Normalization type mapping
+NORM_MAP = {
+    'LUFS':     tts_pb2.UtteranceSynthesisRequest.LUFS,
+    'MAX_PEAK': tts_pb2.UtteranceSynthesisRequest.MAX_PEAK,
+}
+
 @app.post("/tts")
 async def start(request):
     request_json = request.json
@@ -57,14 +63,17 @@ async def start(request):
     text_value        = request_json.get("text", "Empty")
     voice_value       = request_json.get("voice", "alexander")
     role_value        = request_json.get("role", "good")
-    speed_value_raw   = request_json.get("speed")
-    speed_value       = check_speed(speed_value_raw)
+    speed_value       = float(request_json.get("speed", 1.0))
+    pitch_shift_value = float(request_json.get("pitchShift", 0))
+    volume_value      = float(request_json.get("volume", -19))
     format_value      = request_json.get("format", "WAV").upper()
+    norm_type_value   = request_json.get("normType", "LUFS").upper()
     unsafe_mode_value = request_json.get("unsafe", False)
 
     fmt = FORMAT_MAP.get(format_value, FORMAT_MAP['WAV'])
+    norm_type = NORM_MAP.get(norm_type_value, NORM_MAP['LUFS'])
 
-    audio_bytes = synthesize(text_value, voice_value, role_value, speed_value, fmt['container'], unsafe_mode_value)
+    audio_bytes = synthesize(text_value, voice_value, role_value, speed_value, pitch_shift_value, volume_value, fmt['container'], norm_type, unsafe_mode_value)
 
     filename = f"audio-{uuid.uuid4()}.{fmt['ext']}"
 
@@ -84,27 +93,14 @@ async def start(request):
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ['PORT']), motd=False, access_log=False)
 
-# Function - Check speed
-def check_speed(input_value):
-    if isinstance(input_value, (int, float)):
-        return float(input_value)
-    elif isinstance(input_value, str):
-        numeric_part = ''.join(filter(lambda x: x.isdigit() or x == '.', input_value))
-        try:
-            return float(numeric_part)
-        except ValueError:
-            print("Incorrect value")
-            return 1.1
-    else:
-        print("Unsupported type.")
-        return 1.1
-
 # Function - Synthesize
-def synthesize(text_value, voice_value, role_value, speed_value, container_audio_type, unsafe_mode_value) -> bytes: 
+def synthesize(text_value, voice_value, role_value, speed_value, pitch_shift_value, volume_value, container_audio_type, norm_type, unsafe_mode_value) -> bytes: 
 
     hints = [
         tts_pb2.Hints(voice=voice_value),
         tts_pb2.Hints(speed=speed_value),
+        tts_pb2.Hints(volume=volume_value),
+        tts_pb2.Hints(pitch_shift=pitch_shift_value),
     ]
     if role_value != "none":
         hints.append(tts_pb2.Hints(role=role_value))
@@ -117,7 +113,7 @@ def synthesize(text_value, voice_value, role_value, speed_value, container_audio
             )
         ),
         hints=hints,
-        loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
+        loudness_normalization_type=norm_type,
         unsafe_mode=unsafe_mode_value
     )
 

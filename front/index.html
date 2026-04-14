@@ -295,6 +295,26 @@
             display: inline-block;
             margin-right: 4px;
         }
+        .sliders-section {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 6px;
+        }
+        .slider-group {
+            margin-bottom: 10px;
+        }
+        .slider-group:last-child {
+            margin-bottom: 0;
+        }
+        .slider-group label {
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
@@ -335,15 +355,32 @@
                 </div>
                 
                 <div class="custom-dropdown">
-                    <button id="speedsDropdown" title="Скорость произношения">Скорость</button>
-                    <div class="dropdown-content" id="speedsDropdownContent"></div>
-                </div>
-                
-                <div class="custom-dropdown">
                     <button id="formatDropdown" title="Формат аудио">WAV</button>
                     <div class="dropdown-content" id="formatDropdownContent"></div>
                 </div>
                 
+                <div class="custom-dropdown">
+                    <button id="normDropdown" title="Нормализация громкости">LUFS</button>
+                    <div class="dropdown-content" id="normDropdownContent"></div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;" class="sliders-section">
+                <div class="slider-group">
+                    <label for="speedSlider">Speed: <span id="speedValue">1.0</span></label>
+                    <input type="range" id="speedSlider" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+                <div class="slider-group">
+                    <label for="pitchSlider">Pitch Shift: <span id="pitchValue">0</span> Hz</label>
+                    <input type="range" id="pitchSlider" min="-1000" max="1000" step="10" value="0">
+                </div>
+                <div class="slider-group">
+                    <label for="volumeSlider">Volume: <span id="volumeValue">-19</span></label>
+                    <input type="range" id="volumeSlider" min="-145" max="-0.1" step="0.1" value="-19">
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
                 <div>
                     <button id="unsafeModeButton" class="btn-outline-danger">
                         <span id="unsafeModeLabel">Unsafe Mode</span>

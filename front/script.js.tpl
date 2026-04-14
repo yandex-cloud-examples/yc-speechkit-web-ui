@@ -32,15 +32,17 @@ const voices = {
 };
 
 // Default values
-const speeds = ["0.5x", "1.0x", "1.5x", "2.0x", "3.0x"];
 const defaultVoice = 'marina';
 const defaultRole = 'neutral';
 
 // Dropdowns and parameters
 let currentVoice = '';
 let currentRole = '';
-let currentSpeed = '';
+let currentSpeed = 1.0;
+let currentPitchShift = 0;
+let currentVolume = -19;
 let currentFormat = 'WAV';
+let currentNormType = 'LUFS';
 let currentUnsafeMode = false;
 
 // Add CSS for dropdowns
@@ -98,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize TTS components
     populateVoicesDropdown();
     selectDefaultVoice(defaultVoice);
-    selectDefaultSpeed("1.0x");
     
     // Setup dropdown toggles
     document.getElementById('voicesDropdown').addEventListener('click', function() {
@@ -109,12 +110,12 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('rolesDropdownContent').classList.toggle('show');
     });
     
-    document.getElementById('speedsDropdown').addEventListener('click', function() {
-        document.getElementById('speedsDropdownContent').classList.toggle('show');
-    });
-    
     document.getElementById('formatDropdown').addEventListener('click', function() {
         document.getElementById('formatDropdownContent').classList.toggle('show');
+    });
+    
+    document.getElementById('normDropdown').addEventListener('click', function() {
+        document.getElementById('normDropdownContent').classList.toggle('show');
     });
     
     // Populate format dropdown
@@ -131,6 +132,60 @@ document.addEventListener('DOMContentLoaded', function() {
         formatDropdownContent.appendChild(item);
     });
     
+    // Populate normalization type dropdown
+    const normOptions = [
+        { label: 'LUFS', value: 'LUFS' },
+        { label: 'MAX_PEAK', value: 'MAX_PEAK' }
+    ];
+    const normDropdownContent = document.getElementById('normDropdownContent');
+    normOptions.forEach(function(opt) {
+        const item = document.createElement('a');
+        item.textContent = opt.label;
+        item.onclick = function() {
+            currentNormType = opt.value;
+            document.getElementById('normDropdown').textContent = opt.label;
+            normDropdownContent.classList.remove('show');
+            updateVolumeSliderRange();
+        };
+        normDropdownContent.appendChild(item);
+    });
+    
+    // Slider event listeners
+    document.getElementById('speedSlider').addEventListener('input', function() {
+        currentSpeed = parseFloat(this.value);
+        document.getElementById('speedValue').textContent = currentSpeed.toFixed(1);
+    });
+    
+    document.getElementById('pitchSlider').addEventListener('input', function() {
+        currentPitchShift = parseInt(this.value);
+        document.getElementById('pitchValue').textContent = currentPitchShift;
+    });
+    
+    document.getElementById('volumeSlider').addEventListener('input', function() {
+        currentVolume = parseFloat(this.value);
+        document.getElementById('volumeValue').textContent = currentVolume;
+    });
+    
+    function updateVolumeSliderRange() {
+        const slider = document.getElementById('volumeSlider');
+        const valueLabel = document.getElementById('volumeValue');
+        if (currentNormType === 'LUFS') {
+            slider.min = '-145';
+            slider.max = '-0.1';
+            slider.step = '0.1';
+            slider.value = '-19';
+            currentVolume = -19;
+            valueLabel.textContent = '-19';
+        } else {
+            slider.min = '0.01';
+            slider.max = '1';
+            slider.step = '0.01';
+            slider.value = '0.7';
+            currentVolume = 0.7;
+            valueLabel.textContent = '0.7';
+        }
+    }
+    
     // Close dropdowns when clicking outside
     window.addEventListener('click', function(event) {
         if (!event.target.matches('#voicesDropdown')) {
@@ -145,14 +200,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.classList.remove('show');
             }
         }
-        if (!event.target.matches('#speedsDropdown')) {
-            const dropdown = document.getElementById('speedsDropdownContent');
+        if (!event.target.matches('#formatDropdown')) {
+            const dropdown = document.getElementById('formatDropdownContent');
             if (dropdown.classList.contains('show')) {
                 dropdown.classList.remove('show');
             }
         }
-        if (!event.target.matches('#formatDropdown')) {
-            const dropdown = document.getElementById('formatDropdownContent');
+        if (!event.target.matches('#normDropdown')) {
+            const dropdown = document.getElementById('normDropdownContent');
             if (dropdown.classList.contains('show')) {
                 dropdown.classList.remove('show');
             }
@@ -203,33 +258,11 @@ function populateVoicesDropdown() {
     }
 }
 
-// Populating speeds dropdown
-function populateSpeedsDropdown() {
-    const speedsDropdownContent = document.getElementById('speedsDropdownContent');
-    speeds.forEach(function(speed) {
-        const item = document.createElement('a');
-        item.textContent = speed;
-        item.onclick = function() {
-            currentSpeed = speed;
-            document.getElementById('speedsDropdown').textContent = speed;
-            speedsDropdownContent.classList.remove('show');
-        };
-        speedsDropdownContent.appendChild(item);
-    });
-}
-
 // Selecting default voice
 function selectDefaultVoice(name) {
     currentVoice = name;
     populateRolesDropdown(name);
     document.getElementById('voicesDropdown').textContent = name;
-}
-
-// Selecting default speed
-function selectDefaultSpeed(speed) {
-    currentSpeed = speed;
-    populateSpeedsDropdown();
-    document.getElementById('speedsDropdown').textContent = speed;
 }
 
 // Populating roles dropdown
@@ -336,7 +369,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 voice: currentVoice,
                 role: currentRole,
                 speed: currentSpeed,
+                pitchShift: currentPitchShift,
+                volume: currentVolume,
                 format: currentFormat,
+                normType: currentNormType,
                 unsafe: currentUnsafeMode
             }),
         })

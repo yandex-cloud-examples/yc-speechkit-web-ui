@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>SpeechKit Workbench</title>
+    <title>SpeechKit Web UI</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -185,11 +185,141 @@
         .json-null {
             color: #1A1AA6;
         }
+        .dialogue-container {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .dialogue-bubble {
+            max-width: 75%;
+            padding: 10px 14px;
+            border-radius: 12px;
+            margin-bottom: 8px;
+            font-size: 0.85rem;
+            line-height: 1.4;
+            word-break: break-word;
+            clear: both;
+            position: relative;
+        }
+        .dialogue-bubble.left {
+            background: #e3e8ed;
+            color: #333;
+            float: left;
+            border-bottom-left-radius: 2px;
+        }
+        .dialogue-bubble.right {
+            background: #3498db;
+            color: white;
+            float: right;
+            border-bottom-right-radius: 2px;
+        }
+        .bubble-tooltip {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            background: rgba(0, 0, 0, 0.85);
+            color: #fff;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            line-height: 1.4;
+            white-space: nowrap;
+            z-index: 10;
+            margin-bottom: 6px;
+            pointer-events: none;
+        }
+        .dialogue-bubble.right .bubble-tooltip {
+            left: auto;
+            right: 0;
+        }
+        .dialogue-bubble:hover .bubble-tooltip {
+            display: block;
+        }
+        .tooltip-row {
+            margin-bottom: 2px;
+        }
+        .tooltip-label {
+            color: #aaa;
+            margin-right: 4px;
+        }
+        .dialogue-clearfix {
+            clear: both;
+        }
+        .analysis-section {
+            display: none;
+            margin-top: 10px;
+        }
+        .analysis-card {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 12px 16px;
+            margin-bottom: 10px;
+        }
+        .analysis-card h6 {
+            margin: 0 0 8px 0;
+            font-size: 0.9rem;
+            color: #2c3e50;
+        }
+        .analysis-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.8rem;
+        }
+        .analysis-table th,
+        .analysis-table td {
+            text-align: left;
+            padding: 4px 8px;
+            border-bottom: 1px solid #eee;
+        }
+        .analysis-table th {
+            color: #7f8c8d;
+            font-weight: 600;
+        }
+        .analysis-table td {
+            color: #333;
+        }
+        .interrupts-list {
+            font-size: 0.8rem;
+            margin-top: 6px;
+        }
+        .interrupts-list .interrupt-item {
+            background: #fff3cd;
+            border-radius: 4px;
+            padding: 4px 8px;
+            margin-bottom: 4px;
+            display: inline-block;
+            margin-right: 4px;
+        }
+        .sliders-section {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 6px;
+        }
+        .slider-group {
+            margin-bottom: 10px;
+        }
+        .slider-group:last-child {
+            margin-bottom: 0;
+        }
+        .slider-group label {
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+        .slider-group input[type="range"] {
+            width: 100%;
+            margin: 0;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>SpeechKit Workbench</h2>
+        <h2>SpeechKit Web UI</h2>
         
         <!-- Simple tabs -->
         <div class="tabs">
@@ -199,7 +329,7 @@
         
         <!-- Tab content -->
         <div class="tab-content active" id="textToSpeech">
-            <h5>Text-to-Speech</h5>
+            <h3>Синтез речи</h3>
             <textarea id="textInput" rows="3" maxlength="250"></textarea>
             <div id="charCount">0/250</div>
             
@@ -225,10 +355,35 @@
                 </div>
                 
                 <div class="custom-dropdown">
-                    <button id="speedsDropdown" title="Скорость произношения">Скорость</button>
-                    <div class="dropdown-content" id="speedsDropdownContent"></div>
+                    <button id="formatDropdown" title="Формат аудио">WAV</button>
+                    <div class="dropdown-content" id="formatDropdownContent"></div>
                 </div>
                 
+                <div class="custom-dropdown">
+                    <button id="normDropdown" title="Нормализация громкости">LUFS</button>
+                    <div class="dropdown-content" id="normDropdownContent"></div>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;" class="sliders-section">
+                <div class="slider-group">
+                    <label for="speedSlider">Speed: <span id="speedValue">1.0</span></label>
+                    <input type="range" id="speedSlider" min="0.1" max="3.0" step="0.1" value="1.0">
+                </div>
+                <div class="slider-group">
+                    <label for="pitchSlider">Pitch Shift: <span id="pitchValue">0</span> Hz</label>
+                    <input type="range" id="pitchSlider" min="-1000" max="1000" step="10" value="0">
+                </div>
+                <div class="slider-group">
+                    <label for="volumeSlider">Volume: <span id="volumeValue">-19</span></label>
+                    <input type="range" id="volumeSlider" min="-145" max="-0.1" step="0.1" value="-19">
+                </div>
+                <div style="margin-top: 8px;">
+                    <button id="resetSlidersBtn" class="btn-secondary" style="font-size: 0.8em; padding: 4px 10px;">Reset</button>
+                </div>
+            </div>
+            
+            <div style="margin-top: 15px;">
                 <div>
                     <button id="unsafeModeButton" class="btn-outline-danger">
                         <span id="unsafeModeLabel">Unsafe Mode</span>
@@ -237,19 +392,18 @@
                 </div>
             </div>
             
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 15px;" id="ttsButtonRow">
                 <button id="sendButton">Отправить</button>
                 <button id="processing" disabled>
                     <span class="spinner"></span>
                     <span>Обработка запроса...</span>
                 </button>
+                <span id="playbackButtonContainer"></span>
             </div>
-            
-            <div id="playbackButtonContainer"></div>
         </div>
         
         <div class="tab-content" id="speechToText">
-            <h5>Speech-to-Text</h5>
+            <h3>Распознавание аудиофайлов</h3>
             <form id="audioUploadForm" enctype="multipart/form-data">
                 <div class="form-group">
                     <label for="fileInput">Загрузка аудиофайла</label>
@@ -257,7 +411,7 @@
                 </div>
                 
                 <div class="form-group">
-                    <label for="languageSelect">Language</label>
+                    <label for="languageSelect">Язык</label>
                     <select id="languageSelect" name="lang">
                         <option value="ru-RU">Русский</option>
                         <option value="auto">Автоматически</option>
@@ -274,8 +428,13 @@
                 </div>
                 
                 <div class="form-group hidden" id="rateForm">
-                    <label for="sampleRateInput">Sample Rate (Hz)</label>
+                    <label for="sampleRateInput">Частота дискретизации (кГц)</label>
                     <input type="number" id="sampleRateInput" name="sampleRate" value="48000">
+                </div>
+                
+                <div class="form-group">
+                    <label for="summaryInstructionInput">Промпт модели</label>
+                    <textarea id="summaryInstructionInput" name="summaryInstruction" rows="3" style="font-size: 0.85rem;">Кратко суммируй следующий диалог. Выдели ключевые моменты обсуждения и итог.</textarea>
                 </div>
                 
                 <button id="sendButtonStt" type="submit">Отправить</button>
@@ -285,22 +444,36 @@
                 </button>
             </form>
             
-            <h6>Raw JSON</h6>
-            <div class="result-container">
-                <div id="resultStt" class="bg-light text-monospace text-break"></div>
-                <button class="copy-btn" id="copyJsonBtn">Copy</button>
-            </div>
+            <h6>Dialogue</h6>
+            <div id="dialogueSection" class="dialogue-container"></div>
             
-            <h6>Channel Tag 1</h6>
-            <div class="result-container">
-                <div id="resultSttTagOne" class="bg-light text-monospace text-break"></div>
-                <button class="copy-btn" id="copyChannel1Btn">Copy</button>
-            </div>
+            <h6>
+                Статистика участников
+                <button id="toggleSpeakerBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="speakerAnalysisSection" class="analysis-section"></div>
             
-            <h6>Channel Tag 2</h6>
-            <div class="result-container">
-                <div id="resultSttTagTwo" class="bg-light text-monospace text-break"></div>
-                <button class="copy-btn" id="copyChannel2Btn">Copy</button>
+            <h6>
+                Статистика диалога
+                <button id="toggleConversationBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="conversationAnalysisSection" class="analysis-section"></div>
+
+            <h6>
+                Результат обработки с помощью LLM
+                <button id="toggleSummaryBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="summarySection" class="analysis-section"></div>
+
+            <h6>
+                Raw JSON
+                <button id="toggleJsonBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            </h6>
+            <div id="rawJsonSection" style="display: none;">
+                <div class="result-container">
+                    <div id="resultStt" class="bg-light text-monospace text-break" style="max-height: 500px; overflow-y: auto;"></div>
+                    <button class="copy-btn" id="copyJsonBtn">Copy</button>
+                </div>
             </div>
         </div>
     </div>

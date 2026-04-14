@@ -28,7 +28,7 @@ resource "yandex_serverless_container" "tts" {
   }
 
   image {
-      url = "cr.yandex/sol/speechkit-workbench/tts-service:1.0.1"
+      url = "cr.yandex/sol/speechkit-workbench/tts-service:1.1.0"
       environment = {
           S3_BUCKET = yandex_storage_bucket.front.bucket
       }
@@ -64,9 +64,10 @@ resource "yandex_serverless_container" "stt" {
   }
 
   image {
-      url = "cr.yandex/sol/speechkit-workbench/stt-service:1.0.1"
+      url = "cr.yandex/sol/speechkit-workbench/stt-service:1.1.0"
       environment = {
           S3_BUCKET = yandex_storage_bucket.front.bucket
+          MODEL_URI = "gpt://${var.folder_id}/yandexgpt-5.1"
       }
   }
 }

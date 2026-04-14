@@ -4,15 +4,12 @@ import io
 import json
 import logging
 import os
-import pydub
 import uuid
-
-from datetime import datetime
 
 from botocore.exceptions import ClientError
 
-import yandex.cloud.ai.tts.v3.tts_pb2 as tts_pb2
-import yandex.cloud.ai.tts.v3.tts_service_pb2_grpc as tts_service_pb2_grpc
+from yandex.cloud.ai.tts.v3 import tts_pb2
+from yandex.cloud.ai.tts.v3 import tts_service_pb2_grpc
 
 from sanic import Sanic
 from sanic.response import text
@@ -45,6 +42,19 @@ CORS(app)
 async def after_server_start(app, loop):
     print(f"App listening at port {os.environ['PORT']}")
 
+# Format mapping
+FORMAT_MAP = {
+    'WAV':      {'container': tts_pb2.ContainerAudio.WAV,      'ext': 'wav'},
+    'OGG_OPUS': {'container': tts_pb2.ContainerAudio.OGG_OPUS, 'ext': 'ogg'},
+    'MP3':      {'container': tts_pb2.ContainerAudio.MP3,       'ext': 'mp3'},
+}
+
+# Normalization type mapping
+NORM_MAP = {
+    'LUFS':     tts_pb2.UtteranceSynthesisRequest.LUFS,
+    'MAX_PEAK': tts_pb2.UtteranceSynthesisRequest.MAX_PEAK,
+}
+
 @app.post("/tts")
 async def start(request):
     request_json = request.json
@@ -53,18 +63,24 @@ async def start(request):
     text_value        = request_json.get("text", "Empty")
     voice_value       = request_json.get("voice", "alexander")
     role_value        = request_json.get("role", "good")
-    speed_value_raw   = request_json.get("speed")
-    speed_value       = check_speed(speed_value_raw)
+    speed_value       = float(request_json.get("speed", 1.0))
+    pitch_shift_value = float(request_json.get("pitchShift", 0))
+    volume_value      = float(request_json.get("volume", -19))
+    format_value      = request_json.get("format", "WAV").upper()
+    norm_type_value   = request_json.get("normType", "LUFS").upper()
     unsafe_mode_value = request_json.get("unsafe", False)
 
-    audio = synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_value)
+    fmt = FORMAT_MAP.get(format_value, FORMAT_MAP['WAV'])
+    norm_type = NORM_MAP.get(norm_type_value, NORM_MAP['LUFS'])
 
-    filename = f"audio-{uuid.uuid4()}.wav"
+    audio_bytes = synthesize(text_value, voice_value, role_value, speed_value, pitch_shift_value, volume_value, fmt['container'], norm_type, unsafe_mode_value)
+
+    filename = f"audio-{uuid.uuid4()}.{fmt['ext']}"
 
     with open(f"/app/{filename}", 'wb') as fp:
-        audio.export(fp, format='wav')
+        fp.write(audio_bytes)
     
-    status = upload_file_to_s3(f"/app/{filename}",f"audio/{filename}")
+    status = upload_file_to_s3(f"/app/{filename}", f"audio/{filename}")
     print("status {}".format(status))
 
     if (status):
@@ -77,55 +93,29 @@ async def start(request):
 if __name__ == "__main__":
     app.run(host='0.0.0.0', port=int(os.environ['PORT']), motd=False, access_log=False)
 
-# Function - Check speed
-def check_speed(input_value):
-    if isinstance(input_value, (int, float)):
-        return float(input_value)
-    elif isinstance(input_value, str):
-        numeric_part = ''.join(filter(lambda x: x.isdigit() or x == '.', input_value))
-        try:
-            return float(numeric_part)
-        except ValueError:
-            print("Incorrect value")
-            return 1.1
-    else:
-        print("Unsupported type.")
-        return 1.1
-
 # Function - Synthesize
-def synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_value) -> pydub.AudioSegment: 
+def synthesize(text_value, voice_value, role_value, speed_value, pitch_shift_value, volume_value, container_audio_type, norm_type, unsafe_mode_value) -> bytes: 
 
-    if role_value == "none":
-        request = tts_pb2.UtteranceSynthesisRequest(
-            text=text_value,
-            output_audio_spec=tts_pb2.AudioFormatOptions(
-                container_audio=tts_pb2.ContainerAudio(
-                    container_audio_type=tts_pb2.ContainerAudio.WAV
-                )
-            ),
-            hints=[
-            tts_pb2.Hints(voice = voice_value),
-            tts_pb2.Hints(speed = speed_value),
-            ],
-            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
-            unsafe_mode=unsafe_mode_value
-        )
-    else:
-        request = tts_pb2.UtteranceSynthesisRequest(
-            text=text_value,
-            output_audio_spec=tts_pb2.AudioFormatOptions(
-                container_audio=tts_pb2.ContainerAudio(
-                    container_audio_type=tts_pb2.ContainerAudio.WAV
-                )
-            ),
-            hints=[
-            tts_pb2.Hints(voice = voice_value),
-            tts_pb2.Hints(role  = role_value),
-            tts_pb2.Hints(speed = speed_value),
-            ],
-            loudness_normalization_type=tts_pb2.UtteranceSynthesisRequest.LUFS,
-            unsafe_mode=unsafe_mode_value
-        )
+    hints = [
+        tts_pb2.Hints(voice=voice_value),
+        tts_pb2.Hints(speed=speed_value),
+        tts_pb2.Hints(volume=volume_value),
+        tts_pb2.Hints(pitch_shift=pitch_shift_value),
+    ]
+    if role_value != "none":
+        hints.append(tts_pb2.Hints(role=role_value))
+
+    request = tts_pb2.UtteranceSynthesisRequest(
+        text=text_value,
+        output_audio_spec=tts_pb2.AudioFormatOptions(
+            container_audio=tts_pb2.ContainerAudio(
+                container_audio_type=container_audio_type
+            )
+        ),
+        hints=hints,
+        loudness_normalization_type=norm_type,
+        unsafe_mode=unsafe_mode_value
+    )
 
     cred = grpc.ssl_channel_credentials()
     channel = grpc.secure_channel(config['request_api'], cred)
@@ -142,8 +132,7 @@ def synthesize(text_value, voice_value, role_value, speed_value, unsafe_mode_val
         audio = io.BytesIO()
         for response in it:
             audio.write(response.audio_chunk.data)
-        audio.seek(0)
-        return pydub.AudioSegment.from_wav(audio)
+        return audio.getvalue()
     except grpc._channel._Rendezvous as err:
         print(f'Error code {err._state.code}, message: {err._state.details}')
         raise err

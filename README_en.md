@@ -1,9 +1,9 @@
 # SpeechKit Web UI
 
 <img
-  src="images/web-ui.png"
-  alt="SpeechKit Workbench"
-  title="SpeechKit Workbench"
+  src="images/web-ui-tts.png"
+  alt="SpeechKit Web UI"
+  title="SpeechKit Web UI"
   style="display: inline-block; margin: 0 auto; max-width: 600px">
 
 This repository contains an example web app that accesses [Yandex SpeechKit](https://yandex.cloud/en/services/speechkit) and displays its output in a web interface.
@@ -20,8 +20,8 @@ The result of speech synthesis is stored in the bucket.
 
 <img
   src="images/diagram.png"
-  alt="SpeechKit Workbench"
-  title="SpeechKit Workbench"
+  alt="SpeechKit Web UI"
+  title="SpeechKit Web UI"
   style="display: inline-block; margin: 0 auto; max-width: 400px">
 
 ## Module description

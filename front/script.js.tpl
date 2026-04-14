@@ -23,23 +23,26 @@ const voices = {
     anton: ["neutral", "good"],
     madi_ru: ["none"],
     saule_ru: ["neutral", "strict", "whisper"],
-    lola_ru: ["neutral", "strict"],
+    zamira_ru: ["neutral", "strict", "friendly"],
     zhanar_ru: ["neutral", "strict", "friendly"],
-    yulduz_ru: ["neutral", "strict", "friendly"],
+    yulduz_ru: ["neutral", "strict", "friendly", "whisper"],
     nigora: ["none"],
-    lola: ["none"],
-    yulduz: ["none"]
+    zamira: ["neutral", "strict", "friendly"],
+    yulduz: ["neutral", "strict", "friendly", "whisper"],
 };
 
 // Default values
-const speeds = ["0.5x", "1.0x", "1.5x", "2.0x", "3.0x"];
 const defaultVoice = 'marina';
 const defaultRole = 'neutral';
 
 // Dropdowns and parameters
 let currentVoice = '';
 let currentRole = '';
-let currentSpeed = '';
+let currentSpeed = 1.0;
+let currentPitchShift = 0;
+let currentVolume = -19;
+let currentFormat = 'WAV';
+let currentNormType = 'LUFS';
 let currentUnsafeMode = false;
 
 // Add CSS for dropdowns
@@ -97,7 +100,6 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize TTS components
     populateVoicesDropdown();
     selectDefaultVoice(defaultVoice);
-    selectDefaultSpeed("1.0x");
     
     // Setup dropdown toggles
     document.getElementById('voicesDropdown').addEventListener('click', function() {
@@ -108,8 +110,106 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('rolesDropdownContent').classList.toggle('show');
     });
     
-    document.getElementById('speedsDropdown').addEventListener('click', function() {
-        document.getElementById('speedsDropdownContent').classList.toggle('show');
+    document.getElementById('formatDropdown').addEventListener('click', function() {
+        document.getElementById('formatDropdownContent').classList.toggle('show');
+    });
+    
+    document.getElementById('normDropdown').addEventListener('click', function() {
+        document.getElementById('normDropdownContent').classList.toggle('show');
+    });
+    
+    // Populate format dropdown
+    const formatOptions = ['WAV', 'OGG_OPUS', 'MP3'];
+    const formatDropdownContent = document.getElementById('formatDropdownContent');
+    formatOptions.forEach(function(fmt) {
+        const item = document.createElement('a');
+        item.textContent = fmt;
+        item.onclick = function() {
+            currentFormat = fmt;
+            document.getElementById('formatDropdown').textContent = fmt;
+            formatDropdownContent.classList.remove('show');
+        };
+        formatDropdownContent.appendChild(item);
+    });
+    
+    // Populate normalization type dropdown
+    const normOptions = [
+        { label: 'LUFS', value: 'LUFS' },
+        { label: 'MAX_PEAK', value: 'MAX_PEAK' }
+    ];
+    const normDropdownContent = document.getElementById('normDropdownContent');
+    normOptions.forEach(function(opt) {
+        const item = document.createElement('a');
+        item.textContent = opt.label;
+        item.onclick = function() {
+            currentNormType = opt.value;
+            document.getElementById('normDropdown').textContent = opt.label;
+            normDropdownContent.classList.remove('show');
+            updateVolumeSliderRange();
+        };
+        normDropdownContent.appendChild(item);
+    });
+    
+    // Slider event listeners
+    document.getElementById('speedSlider').addEventListener('input', function() {
+        currentSpeed = parseFloat(this.value);
+        document.getElementById('speedValue').textContent = currentSpeed.toFixed(1);
+    });
+    
+    document.getElementById('pitchSlider').addEventListener('input', function() {
+        currentPitchShift = parseInt(this.value);
+        document.getElementById('pitchValue').textContent = currentPitchShift;
+    });
+    
+    document.getElementById('volumeSlider').addEventListener('input', function() {
+        currentVolume = parseFloat(this.value);
+        document.getElementById('volumeValue').textContent = currentVolume;
+    });
+    
+    function updateVolumeSliderRange() {
+        const slider = document.getElementById('volumeSlider');
+        const valueLabel = document.getElementById('volumeValue');
+        if (currentNormType === 'LUFS') {
+            slider.min = '-145';
+            slider.max = '-0.1';
+            slider.step = '0.1';
+            slider.value = '-19';
+            currentVolume = -19;
+            valueLabel.textContent = '-19';
+        } else {
+            slider.min = '0.1';
+            slider.max = '1';
+            slider.step = '0.01';
+            slider.value = '0.7';
+            currentVolume = 0.7;
+            valueLabel.textContent = '0.7';
+        }
+    }
+    
+    // Reset sliders button
+    document.getElementById('resetSlidersBtn').addEventListener('click', function() {
+        // Speed
+        currentSpeed = 1.0;
+        document.getElementById('speedSlider').value = '1.0';
+        document.getElementById('speedValue').textContent = '1.0';
+        
+        // Pitch
+        currentPitchShift = 0;
+        document.getElementById('pitchSlider').value = '0';
+        document.getElementById('pitchValue').textContent = '0';
+        
+        // Normalization type
+        currentNormType = 'LUFS';
+        document.getElementById('normDropdown').textContent = 'LUFS';
+        
+        // Volume (reset range then value)
+        var slider = document.getElementById('volumeSlider');
+        slider.min = '-145';
+        slider.max = '-0.1';
+        slider.step = '0.1';
+        slider.value = '-19';
+        currentVolume = -19;
+        document.getElementById('volumeValue').textContent = '-19';
     });
     
     // Close dropdowns when clicking outside
@@ -126,8 +226,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.classList.remove('show');
             }
         }
-        if (!event.target.matches('#speedsDropdown')) {
-            const dropdown = document.getElementById('speedsDropdownContent');
+        if (!event.target.matches('#formatDropdown')) {
+            const dropdown = document.getElementById('formatDropdownContent');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        }
+        if (!event.target.matches('#normDropdown')) {
+            const dropdown = document.getElementById('normDropdownContent');
             if (dropdown.classList.contains('show')) {
                 dropdown.classList.remove('show');
             }
@@ -178,33 +284,11 @@ function populateVoicesDropdown() {
     }
 }
 
-// Populating speeds dropdown
-function populateSpeedsDropdown() {
-    const speedsDropdownContent = document.getElementById('speedsDropdownContent');
-    speeds.forEach(function(speed) {
-        const item = document.createElement('a');
-        item.textContent = speed;
-        item.onclick = function() {
-            currentSpeed = speed;
-            document.getElementById('speedsDropdown').textContent = speed;
-            speedsDropdownContent.classList.remove('show');
-        };
-        speedsDropdownContent.appendChild(item);
-    });
-}
-
 // Selecting default voice
 function selectDefaultVoice(name) {
     currentVoice = name;
     populateRolesDropdown(name);
     document.getElementById('voicesDropdown').textContent = name;
-}
-
-// Selecting default speed
-function selectDefaultSpeed(speed) {
-    currentSpeed = speed;
-    populateSpeedsDropdown();
-    document.getElementById('speedsDropdown').textContent = speed;
 }
 
 // Populating roles dropdown
@@ -311,6 +395,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 voice: currentVoice,
                 role: currentRole,
                 speed: currentSpeed,
+                pitchShift: currentPitchShift,
+                volume: currentVolume,
+                format: currentFormat,
+                normType: currentNormType,
                 unsafe: currentUnsafeMode
             }),
         })
@@ -338,7 +426,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     downloadButton.onclick = function() {
                         var link = document.createElement('a');
                         link.href = audioUrl;
-                        link.download = 'audio.wav';
+                        var ext = currentFormat === 'OGG_OPUS' ? 'ogg' : currentFormat.toLowerCase();
+                        link.download = 'audio.' + ext;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);
@@ -370,30 +459,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }.bind(this));
     });
     
-    document.getElementById('copyChannel1Btn').addEventListener('click', function() {
-        const resultDiv = document.getElementById('resultSttTagOne');
-        const textToCopy = resultDiv.textContent;
-        
-        navigator.clipboard.writeText(textToCopy).then(function() {
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            setTimeout(() => {
-                this.textContent = originalText;
-            }, 1500);
-        }.bind(this));
+    // Toggle Raw JSON visibility
+    document.getElementById('toggleJsonBtn').addEventListener('click', function() {
+        const section = document.getElementById('rawJsonSection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
     });
     
-    document.getElementById('copyChannel2Btn').addEventListener('click', function() {
-        const resultDiv = document.getElementById('resultSttTagTwo');
-        const textToCopy = resultDiv.textContent;
-        
-        navigator.clipboard.writeText(textToCopy).then(function() {
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            setTimeout(() => {
-                this.textContent = originalText;
-            }, 1500);
-        }.bind(this));
+    // Toggle Speaker Analysis visibility
+    document.getElementById('toggleSpeakerBtn').addEventListener('click', function() {
+        const section = document.getElementById('speakerAnalysisSection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
+    });
+    
+    // Toggle Conversation Analysis visibility
+    document.getElementById('toggleConversationBtn').addEventListener('click', function() {
+        const section = document.getElementById('conversationAnalysisSection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
+    });
+    
+    // Toggle Summary visibility
+    document.getElementById('toggleSummaryBtn').addEventListener('click', function() {
+        const section = document.getElementById('summarySection');
+        if (section.style.display === 'none') {
+            section.style.display = 'block';
+            this.textContent = 'Hide';
+        } else {
+            section.style.display = 'none';
+            this.textContent = 'Show';
+        }
     });
     
     // STT file input handling
@@ -420,8 +531,16 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('sendButtonStt').style.display = 'none';
         
         document.getElementById('resultStt').innerHTML = '';
-        document.getElementById('resultSttTagOne').innerHTML = '';
-        document.getElementById('resultSttTagTwo').innerHTML = '';
+        document.getElementById('dialogueSection').innerHTML = '';
+        document.getElementById('speakerAnalysisSection').innerHTML = '';
+        document.getElementById('conversationAnalysisSection').innerHTML = '';
+        document.getElementById('speakerAnalysisSection').style.display = 'none';
+        document.getElementById('conversationAnalysisSection').style.display = 'none';
+        document.getElementById('toggleSpeakerBtn').textContent = 'Show';
+        document.getElementById('toggleConversationBtn').textContent = 'Show';
+        document.getElementById('summarySection').innerHTML = '';
+        document.getElementById('summarySection').style.display = 'none';
+        document.getElementById('toggleSummaryBtn').textContent = 'Show';
         
         // Presigning URL
         var encodedFilename = encodeURIComponent(fileName);
@@ -453,7 +572,8 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify({
                         key: objectKey,
                         lang: lang,
-                        rate: rate
+                        rate: rate,
+                        summaryInstruction: document.getElementById('summaryInstructionInput').value
                     })
                 }).then(response => response.json());
             })
@@ -509,37 +629,297 @@ function checkOperationStatus(operationId) {
                     newParagraphStt.innerHTML = highlighted;
                     resultSttDiv.appendChild(newParagraphStt);
                     
-                    // Process channel data
+                    // Process channel data as dialogue
                     let result = response.result.chunks;
-                    let textForChannel1 = "";
-                    let textForChannel2 = "";
+                    const dialogueSection = document.getElementById('dialogueSection');
+                    dialogueSection.innerHTML = '';
                     
-                    result.forEach(chunk => {
-                        chunk.alternatives.forEach(alternative => {
-                            if (chunk.channelTag === "1") {
-                                textForChannel1 += alternative.text + "\n";
-                            } else if (chunk.channelTag === "2") {
-                                textForChannel2 += alternative.text + "\n";
-                            }
-                        });
-                    });
-                    
-                    let htmlTextForChannel1 = textForChannel1.replace(/\n/g, '<br>');
-                    let htmlTextForChannel2 = textForChannel2.replace(/\n/g, '<br>');
-                    
-                    const resultSttDivChannel1 = document.getElementById('resultSttTagOne');
-                    const resultSttDivChannel2 = document.getElementById('resultSttTagTwo');
-                    
-                    if (htmlTextForChannel1) {
-                        let p1 = document.createElement('p');
-                        p1.innerHTML = htmlTextForChannel1;
-                        resultSttDivChannel1.appendChild(p1);
+                    // Determine the first channel tag to assign it as "left"
+                    let leftTag = null;
+                    if (result.length > 0) {
+                        leftTag = result[0].channelTag;
                     }
                     
-                    if (htmlTextForChannel2) {
-                        let p2 = document.createElement('p');
-                        p2.innerHTML = htmlTextForChannel2;
-                        resultSttDivChannel2.appendChild(p2);
+                    // Sort chunks chronologically by start time
+                    result.sort(function(a, b) {
+                        var aTime = (a.alternatives && a.alternatives[0]) ? (a.alternatives[0].startTimeMs || 0) : 0;
+                        var bTime = (b.alternatives && b.alternatives[0]) ? (b.alternatives[0].startTimeMs || 0) : 0;
+                        return aTime - bTime;
+                    });
+
+                    function formatTimestamp(ms) {
+                        if (ms === undefined || ms === null || ms === 0) return '0:00.0';
+                        var totalSeconds = parseInt(ms) / 1000;
+                        var minutes = Math.floor(totalSeconds / 60);
+                        var seconds = (totalSeconds % 60).toFixed(1);
+                        if (seconds < 10) seconds = '0' + seconds;
+                        return minutes + ':' + seconds;
+                    }
+                    
+                    result.forEach(chunk => {
+                        const text = chunk.alternatives.map(a => a.text).join(' ');
+                        if (!text.trim()) return;
+                        
+                        const isLeft = (chunk.channelTag === leftTag);
+                        const side = isLeft ? 'left' : 'right';
+                        
+                        const bubble = document.createElement('div');
+                        bubble.className = 'dialogue-bubble ' + side;
+                        
+                        // Build tooltip from first alternative
+                        const alt = chunk.alternatives[0];
+                        const tooltip = document.createElement('div');
+                        tooltip.className = 'bubble-tooltip';
+                        
+                        // Time row
+                        var timeRow = document.createElement('div');
+                        timeRow.className = 'tooltip-row';
+                        timeRow.innerHTML = '<span class="tooltip-label">Time:</span>' +
+                            formatTimestamp(alt.startTimeMs) + ' – ' + formatTimestamp(alt.endTimeMs);
+                        tooltip.appendChild(timeRow);
+                        
+                        // Words count row
+                        var wordsRow = document.createElement('div');
+                        wordsRow.className = 'tooltip-row';
+                        var wordCount = (alt.words && alt.words.length) ? alt.words.length : 0;
+                        wordsRow.innerHTML = '<span class="tooltip-label">Words:</span>' + wordCount;
+                        tooltip.appendChild(wordsRow);
+                        
+                        // Confidence row
+                        if (alt.confidence) {
+                            var confRow = document.createElement('div');
+                            confRow.className = 'tooltip-row';
+                            confRow.innerHTML = '<span class="tooltip-label">Confidence:</span>' +
+                                (parseFloat(alt.confidence) * 100).toFixed(1) + '%';
+                            tooltip.appendChild(confRow);
+                        }
+                        
+                        // Language row
+                        if (alt.languages && alt.languages.length > 0) {
+                            var langRow = document.createElement('div');
+                            langRow.className = 'tooltip-row';
+                            var langParts = alt.languages.map(function(l) {
+                                return l.language_code + ' (' + (parseFloat(l.probability) * 100).toFixed(1) + '%)';
+                            });
+                            langRow.innerHTML = '<span class="tooltip-label">Language:</span>' + langParts.join(', ');
+                            tooltip.appendChild(langRow);
+                        }
+                        
+                        bubble.appendChild(tooltip);
+                        
+                        const content = document.createElement('div');
+                        content.textContent = text;
+                        bubble.appendChild(content);
+                        
+                        dialogueSection.appendChild(bubble);
+                        
+                        // Clearfix after each bubble
+                        const clearfix = document.createElement('div');
+                        clearfix.className = 'dialogue-clearfix';
+                        dialogueSection.appendChild(clearfix);
+                    });
+
+                    // Render Speaker Analysis
+                    const speakerAnalysis = response.result.speakerAnalysis;
+                    const speakerSection = document.getElementById('speakerAnalysisSection');
+                    speakerSection.innerHTML = '';
+                    
+                    if (speakerAnalysis && speakerAnalysis.length > 0) {
+                        speakerAnalysis.forEach(function(sa) {
+                            const card = document.createElement('div');
+                            card.className = 'analysis-card';
+                            
+                            const title = document.createElement('h6');
+                            title.textContent = 'Speaker: ' + (sa.speaker_tag || 'Unknown');
+                            card.appendChild(title);
+                            
+                            const table = document.createElement('table');
+                            table.className = 'analysis-table';
+                            
+                            function addRow(label, value) {
+                                const tr = document.createElement('tr');
+                                const th = document.createElement('th');
+                                th.textContent = label;
+                                const td = document.createElement('td');
+                                td.textContent = value;
+                                tr.appendChild(th);
+                                tr.appendChild(td);
+                                table.appendChild(tr);
+                            }
+                            
+                            function formatMs(ms) {
+                                if (ms === undefined || ms === null) return '—';
+                                var seconds = (parseInt(ms) / 1000).toFixed(1);
+                                return seconds + 's';
+                            }
+                            
+                            function formatRatio(ratio) {
+                                if (ratio === undefined || ratio === null) return '—';
+                                return (parseFloat(ratio) * 100).toFixed(1) + '%';
+                            }
+                            
+                            function formatStat(stat) {
+                                if (!stat) return '—';
+                                return 'mean: ' + (parseFloat(stat.mean || 0)).toFixed(2) +
+                                       ', min: ' + (parseFloat(stat.min || 0)).toFixed(2) +
+                                       ', max: ' + (parseFloat(stat.max || 0)).toFixed(2);
+                            }
+                            
+                            addRow('Total Speech', formatMs(sa.total_speech_ms));
+                            addRow('Speech Ratio', formatRatio(sa.speech_ratio));
+                            addRow('Total Silence', formatMs(sa.total_silence_ms));
+                            addRow('Silence Ratio', formatRatio(sa.silence_ratio));
+                            addRow('Words Count', sa.words_count || '0');
+                            addRow('Letters Count', sa.letters_count || '0');
+                            addRow('Utterance Count', sa.utterance_count || '0');
+                            addRow('Words/sec', formatStat(sa.words_per_second));
+                            addRow('Letters/sec', formatStat(sa.letters_per_second));
+                            addRow('Words/utterance', formatStat(sa.words_per_utterance));
+                            addRow('Letters/utterance', formatStat(sa.letters_per_utterance));
+                            addRow('Utterance Duration', formatStat(sa.utterance_duration_estimation));
+                            
+                            if (sa.speech_boundaries) {
+                                addRow('Speech Start', formatMs(sa.speech_boundaries.start_time_ms));
+                                addRow('Speech End', formatMs(sa.speech_boundaries.end_time_ms));
+                            }
+                            
+                            card.appendChild(table);
+                            speakerSection.appendChild(card);
+                        });
+                    } else {
+                        speakerSection.innerHTML = '<div class="analysis-card">No speaker analysis data available.</div>';
+                    }
+                    
+                    // Render Conversation Analysis
+                    const convAnalysis = response.result.conversationAnalysis;
+                    const convSection = document.getElementById('conversationAnalysisSection');
+                    convSection.innerHTML = '';
+                    
+                    if (convAnalysis) {
+                        const card = document.createElement('div');
+                        card.className = 'analysis-card';
+                        
+                        const table = document.createElement('table');
+                        table.className = 'analysis-table';
+                        
+                        function addConvRow(label, value) {
+                            const tr = document.createElement('tr');
+                            const th = document.createElement('th');
+                            th.textContent = label;
+                            const td = document.createElement('td');
+                            td.textContent = value;
+                            tr.appendChild(th);
+                            tr.appendChild(td);
+                            table.appendChild(tr);
+                        }
+                        
+                        function fmtMs(ms) {
+                            if (ms === undefined || ms === null) return '—';
+                            return (parseInt(ms) / 1000).toFixed(1) + 's';
+                        }
+                        
+                        function fmtRatio(ratio) {
+                            if (ratio === undefined || ratio === null) return '—';
+                            return (parseFloat(ratio) * 100).toFixed(1) + '%';
+                        }
+                        
+                        function fmtStat(stat) {
+                            if (!stat) return '—';
+                            return 'mean: ' + (parseFloat(stat.mean || 0)).toFixed(2) +
+                                   ', min: ' + (parseFloat(stat.min || 0)).toFixed(2) +
+                                   ', max: ' + (parseFloat(stat.max || 0)).toFixed(2);
+                        }
+                        
+                        if (convAnalysis.conversation_boundaries) {
+                            addConvRow('Conversation Start', fmtMs(convAnalysis.conversation_boundaries.start_time_ms));
+                            addConvRow('Conversation End', fmtMs(convAnalysis.conversation_boundaries.end_time_ms));
+                        }
+                        
+                        addConvRow('Total Speech Duration', fmtMs(convAnalysis.total_speech_duration_ms));
+                        addConvRow('Total Speech Ratio', fmtRatio(convAnalysis.total_speech_ratio));
+                        addConvRow('Simultaneous Silence', fmtMs(convAnalysis.total_simultaneous_silence_duration_ms));
+                        addConvRow('Simultaneous Silence Ratio', fmtRatio(convAnalysis.total_simultaneous_silence_ratio));
+                        addConvRow('Silence Duration Stats', fmtStat(convAnalysis.simultaneous_silence_duration_estimation));
+                        addConvRow('Simultaneous Speech', fmtMs(convAnalysis.total_simultaneous_speech_duration_ms));
+                        addConvRow('Simultaneous Speech Ratio', fmtRatio(convAnalysis.total_simultaneous_speech_ratio));
+                        addConvRow('Speech Duration Stats', fmtStat(convAnalysis.simultaneous_speech_duration_estimation));
+                        
+                        card.appendChild(table);
+                        
+                        // Render interrupts per speaker
+                        if (convAnalysis.speaker_interrupts && convAnalysis.speaker_interrupts.length > 0) {
+                            convAnalysis.speaker_interrupts.forEach(function(si) {
+                                const intCard = document.createElement('div');
+                                intCard.style.marginTop = '10px';
+                                
+                                const intTitle = document.createElement('h6');
+                                intTitle.textContent = 'Interrupts by ' + (si.speaker_tag || 'Unknown');
+                                intTitle.style.fontSize = '0.85rem';
+                                intTitle.style.marginBottom = '4px';
+                                intCard.appendChild(intTitle);
+                                
+                                const intInfo = document.createElement('div');
+                                intInfo.className = 'interrupts-list';
+                                intInfo.innerHTML = 'Count: <strong>' + (si.interrupts_count || 0) +
+                                    '</strong> &nbsp;|&nbsp; Total duration: <strong>' + fmtMs(si.interrupts_duration_ms) + '</strong>';
+                                intCard.appendChild(intInfo);
+                                
+                                if (si.interrupts && si.interrupts.length > 0) {
+                                    const intList = document.createElement('div');
+                                    intList.className = 'interrupts-list';
+                                    si.interrupts.forEach(function(seg) {
+                                        const span = document.createElement('span');
+                                        span.className = 'interrupt-item';
+                                        span.textContent = fmtMs(seg.start_time_ms) + ' → ' + fmtMs(seg.end_time_ms);
+                                        intList.appendChild(span);
+                                    });
+                                    intCard.appendChild(intList);
+                                }
+                                
+                                card.appendChild(intCard);
+                            });
+                        }
+                        
+                        convSection.appendChild(card);
+                    } else {
+                        convSection.innerHTML = '<div class="analysis-card">No conversation analysis data available.</div>';
+                    }
+
+                    // Render Summarization
+                    const summaryData = response.result.summarization;
+                    const summarySection = document.getElementById('summarySection');
+                    summarySection.innerHTML = '';
+                    
+                    if (summaryData && summaryData.results && summaryData.results.length > 0) {
+                        const card = document.createElement('div');
+                        card.className = 'analysis-card';
+                        
+                        summaryData.results.forEach(function(item) {
+                            const p = document.createElement('p');
+                            p.style.margin = '0 0 8px 0';
+                            p.style.fontSize = '0.85rem';
+                            p.style.lineHeight = '1.5';
+                            p.textContent = item.response || '';
+                            card.appendChild(p);
+                        });
+                        
+                        if (summaryData.content_usage) {
+                            const usage = document.createElement('div');
+                            usage.style.fontSize = '0.75rem';
+                            usage.style.color = '#7f8c8d';
+                            usage.style.marginTop = '8px';
+                            usage.style.borderTop = '1px solid #eee';
+                            usage.style.paddingTop = '6px';
+                            usage.textContent = 'Tokens: ' +
+                                (summaryData.content_usage.input_text_tokens || 0) + ' input, ' +
+                                (summaryData.content_usage.completion_tokens || 0) + ' completion, ' +
+                                (summaryData.content_usage.total_tokens || 0) + ' total';
+                            card.appendChild(usage);
+                        }
+                        
+                        summarySection.appendChild(card);
+                    } else {
+                        summarySection.innerHTML = '<div class="analysis-card">No summarization data available.</div>';
                     }
                 } else {
                     setTimeout(checkStatus, 5000);

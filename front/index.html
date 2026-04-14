@@ -378,6 +378,9 @@
                     <label for="volumeSlider">Volume: <span id="volumeValue">-19</span></label>
                     <input type="range" id="volumeSlider" min="-145" max="-0.1" step="0.1" value="-19">
                 </div>
+                <div style="margin-top: 8px;">
+                    <button id="resetSlidersBtn" class="btn-secondary" style="font-size: 0.8em; padding: 4px 10px;">Reset</button>
+                </div>
             </div>
             
             <div style="margin-top: 15px;">
@@ -389,15 +392,14 @@
                 </div>
             </div>
             
-            <div style="margin-top: 15px;">
+            <div style="margin-top: 15px;" id="ttsButtonRow">
                 <button id="sendButton">Отправить</button>
                 <button id="processing" disabled>
                     <span class="spinner"></span>
                     <span>Обработка запроса...</span>
                 </button>
+                <span id="playbackButtonContainer"></span>
             </div>
-            
-            <div id="playbackButtonContainer"></div>
         </div>
         
         <div class="tab-content" id="speechToText">

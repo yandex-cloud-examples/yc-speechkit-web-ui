@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', function() {
             currentVolume = -19;
             valueLabel.textContent = '-19';
         } else {
-            slider.min = '0.01';
+            slider.min = '0.1';
             slider.max = '1';
             slider.step = '0.01';
             slider.value = '0.7';
@@ -185,6 +185,32 @@ document.addEventListener('DOMContentLoaded', function() {
             valueLabel.textContent = '0.7';
         }
     }
+    
+    // Reset sliders button
+    document.getElementById('resetSlidersBtn').addEventListener('click', function() {
+        // Speed
+        currentSpeed = 1.0;
+        document.getElementById('speedSlider').value = '1.0';
+        document.getElementById('speedValue').textContent = '1.0';
+        
+        // Pitch
+        currentPitchShift = 0;
+        document.getElementById('pitchSlider').value = '0';
+        document.getElementById('pitchValue').textContent = '0';
+        
+        // Normalization type
+        currentNormType = 'LUFS';
+        document.getElementById('normDropdown').textContent = 'LUFS';
+        
+        // Volume (reset range then value)
+        var slider = document.getElementById('volumeSlider');
+        slider.min = '-145';
+        slider.max = '-0.1';
+        slider.step = '0.1';
+        slider.value = '-19';
+        currentVolume = -19;
+        document.getElementById('volumeValue').textContent = '-19';
+    });
     
     // Close dropdowns when clicking outside
     window.addEventListener('click', function(event) {

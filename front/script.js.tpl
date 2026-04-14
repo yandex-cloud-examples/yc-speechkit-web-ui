@@ -23,12 +23,12 @@ const voices = {
     anton: ["neutral", "good"],
     madi_ru: ["none"],
     saule_ru: ["neutral", "strict", "whisper"],
-    lola_ru: ["neutral", "strict"],
+    zamira_ru: ["neutral", "strict", "friendly"],
     zhanar_ru: ["neutral", "strict", "friendly"],
-    yulduz_ru: ["neutral", "strict", "friendly"],
+    yulduz_ru: ["neutral", "strict", "friendly", "whisper"],
     nigora: ["none"],
-    lola: ["none"],
-    yulduz: ["none"]
+    zamira: ["neutral", "strict", "friendly"],
+    yulduz: ["neutral", "strict", "friendly", "whisper"],
 };
 
 // Default values

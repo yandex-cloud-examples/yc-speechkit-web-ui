@@ -178,10 +178,12 @@ label {
     display: inline-block;
     font-size: 10px;
     margin-right: 4px;
-    transition: transform 0.2s;
 }
-.collapse-arrow.open {
-    transform: rotate(90deg);
+.collapse-arrow::before {
+    content: '▲';
+}
+.collapse-arrow.open::before {
+    content: '▼';
 }
 .help-link {
     display: inline-flex;

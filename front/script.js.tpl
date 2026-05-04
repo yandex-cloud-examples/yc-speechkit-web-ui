@@ -501,8 +501,8 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('conversationAnalysisSection').innerHTML = '';
         document.getElementById('speakerAnalysisSection').style.display = 'none';
         document.getElementById('conversationAnalysisSection').style.display = 'none';
-        document.getElementById('toggleSpeakerBtn').textContent = 'Show';
-        document.getElementById('toggleConversationBtn').textContent = 'Show';
+        document.getElementById('toggleSpeakerBtn').querySelector('.collapse-arrow').classList.remove('open');
+        document.getElementById('toggleConversationBtn').querySelector('.collapse-arrow').classList.remove('open');
         document.getElementById('summarySection').innerHTML = '';
         
         // Presigning URL

@@ -43,7 +43,7 @@ services:
       - ../../front/script.js.tpl:/tmp/script.js.tpl:ro
       - script-volume:/usr/share/nginx/html-rw
     environment:
-      - api_gw=http://localhost:8080
+      - api_gw=${PUBLIC_URL:-http://localhost:8080}
     command: >
       sh -c "cp -r /usr/share/nginx/html/* /usr/share/nginx/html-rw/ &&
              envsubst < /tmp/script.js.tpl > /usr/share/nginx/html-rw/script.js &&

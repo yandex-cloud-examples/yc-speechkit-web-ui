@@ -25,10 +25,13 @@
         <!-- Tab content -->
         <div class="tab-content active" id="textToSpeech">
             <h3>Синтез речи</h3>
+
+            <div class="field-annotation">Текст</div>
             <textarea id="textInput" rows="3" maxlength="250"></textarea>
             <div id="charCount">0/250</div>
             
-            <div>
+            <div style="margin-top: 15px;">
+                <div class="field-annotation">TTS-разметка текста</div>
                 <button id="insertPauseTiny" class="btn-secondary" title="Контекстная пауза, маленькая">&lt;[tiny]&gt;</button>
                 <button id="insertPauseSmall" class="btn-secondary" title="Контекстная пауза, небольшая">&lt;[small]&gt;</button>
                 <button id="insertPauseMedium" class="btn-secondary" title="Контекстная пауза, средняя">&lt;[medium]&gt;</button>
@@ -39,6 +42,7 @@
             </div>
             
             <div style="margin-top: 15px;">
+                <div class="field-annotation">Голос и амплуа</div>
                 <div class="custom-dropdown">
                     <button id="voicesDropdown" title="Голос">Голос</button>
                     <div class="dropdown-content" id="voicesDropdownContent"></div>
@@ -48,7 +52,10 @@
                     <button id="rolesDropdown" title="Амплуа">Амплуа</button>
                     <div class="dropdown-content" id="rolesDropdownContent"></div>
                 </div>
-                
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <div class="field-annotation">Формат файла и нормализация</div>
                 <div class="custom-dropdown">
                     <button id="formatDropdown" title="Формат аудио">WAV</button>
                     <div class="dropdown-content" id="formatDropdownContent"></div>
@@ -61,6 +68,7 @@
             </div>
             
             <div style="margin-top: 15px;" class="sliders-section">
+                <div class="field-annotation">Характеристики синтезируемой речи</div>
                 <div class="slider-group">
                     <label for="speedSlider">Speed: <span id="speedValue">1.0</span></label>
                     <input type="range" id="speedSlider" min="0.1" max="3.0" step="0.1" value="1.0">

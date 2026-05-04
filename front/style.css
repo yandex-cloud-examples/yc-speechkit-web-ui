@@ -137,6 +137,14 @@ label {
     display: block;
     margin-bottom: 5px;
 }
+.field-annotation {
+    font-size: 12px;
+    font-weight: 500;
+    color: #7f8c8d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 6px;
+}
 .bg-light {
     background: #f8f9fa;
     padding: 15px;

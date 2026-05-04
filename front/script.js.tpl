@@ -436,6 +436,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Prevent help links inside collapsible headers from toggling collapse
+    document.querySelectorAll('.collapsible .help-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+    });
+    
     // Toggle Raw JSON visibility
     document.getElementById('toggleJsonBtn').addEventListener('click', function() {
         const section = document.getElementById('rawJsonSection');

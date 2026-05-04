@@ -23,8 +23,8 @@ resource "yandex_storage_object" "index" {
   
   bucket = yandex_storage_bucket.front.bucket
   key    = "index.html"
-  source = "../front/index.html"
-  source_hash = filemd5("../front/index.html")
+  source = "../../front/index.html"
+  source_hash = filemd5("../../front/index.html")
 }
 
 resource "yandex_storage_object" "error" {
@@ -33,8 +33,8 @@ resource "yandex_storage_object" "error" {
   
   bucket = yandex_storage_bucket.front.bucket
   key    = "error.html"
-  source = "../front/error.html"
-  source_hash = filemd5("../front/error.html")
+  source = "../../front/error.html"
+  source_hash = filemd5("../../front/error.html")
 }
 
 resource "yandex_storage_object" "script" {
@@ -43,8 +43,8 @@ resource "yandex_storage_object" "script" {
   
   bucket = yandex_storage_bucket.front.bucket
   key    = "script.js"
-  source_hash = filemd5("../front/script.js.tpl")
-  content = templatefile("../front/script.js.tpl",
+  source_hash = filemd5("../../front/script.js.tpl")
+  content = templatefile("../../front/script.js.tpl",
     {
       api_gw   = "https://${yandex_api_gateway.api-gw.domain}",
     }

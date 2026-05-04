@@ -167,6 +167,22 @@ label {
     letter-spacing: 0.5px;
     margin-bottom: 6px;
 }
+.field-annotation.collapsible {
+    cursor: pointer;
+    user-select: none;
+}
+.field-annotation.collapsible:hover {
+    color: #3498db;
+}
+.collapse-arrow {
+    display: inline-block;
+    font-size: 10px;
+    margin-right: 4px;
+    transition: transform 0.2s;
+}
+.collapse-arrow.open {
+    transform: rotate(90deg);
+}
 .help-link {
     display: inline-flex;
     align-items: center;

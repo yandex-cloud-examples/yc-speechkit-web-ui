@@ -155,30 +155,24 @@
                 </button>
             </form>
             
-            <div class="field-annotation" style="margin-top: 20px;">Dialogue</div>
+            <div class="field-annotation" style="margin-top: 20px;">Диалог</div>
             <div id="dialogueSection" class="dialogue-container"></div>
-            
-            <div class="field-annotation" style="margin-top: 20px;">
-                Статистика участников
-                <button id="toggleSpeakerBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+
+            <div class="field-annotation" style="margin-top: 20px;">Результат обработки LLM</div>
+            <div id="summarySection" class="analysis-section" style="display: block;"></div>
+
+            <div class="field-annotation collapsible" style="margin-top: 20px;" id="toggleSpeakerBtn">
+                <span class="collapse-arrow">▶</span> Статистика участников
             </div>
             <div id="speakerAnalysisSection" class="analysis-section"></div>
             
-            <div class="field-annotation" style="margin-top: 20px;">
-                Статистика диалога
-                <button id="toggleConversationBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            <div class="field-annotation collapsible" style="margin-top: 20px;" id="toggleConversationBtn">
+                <span class="collapse-arrow">▶</span> Статистика диалога
             </div>
             <div id="conversationAnalysisSection" class="analysis-section"></div>
 
-            <div class="field-annotation" style="margin-top: 20px;">
-                Результат обработки с помощью LLM
-                <button id="toggleSummaryBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
-            </div>
-            <div id="summarySection" class="analysis-section"></div>
-
-            <div class="field-annotation" style="margin-top: 20px;">
-                Raw JSON
-                <button id="toggleJsonBtn" class="btn-secondary" style="font-size: 0.8em; padding: 2px 8px; margin-left: 10px;">Show</button>
+            <div class="field-annotation collapsible" style="margin-top: 20px;" id="toggleJsonBtn">
+                <span class="collapse-arrow">▶</span> Raw JSON
             </div>
             <div id="rawJsonSection" style="display: none;">
                 <div class="result-container">

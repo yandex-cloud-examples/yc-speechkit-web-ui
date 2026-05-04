@@ -436,48 +436,39 @@ document.addEventListener('DOMContentLoaded', function() {
     // Toggle Raw JSON visibility
     document.getElementById('toggleJsonBtn').addEventListener('click', function() {
         const section = document.getElementById('rawJsonSection');
+        const arrow = this.querySelector('.collapse-arrow');
         if (section.style.display === 'none') {
             section.style.display = 'block';
-            this.textContent = 'Hide';
+            arrow.classList.add('open');
         } else {
             section.style.display = 'none';
-            this.textContent = 'Show';
+            arrow.classList.remove('open');
         }
     });
     
     // Toggle Speaker Analysis visibility
     document.getElementById('toggleSpeakerBtn').addEventListener('click', function() {
         const section = document.getElementById('speakerAnalysisSection');
+        const arrow = this.querySelector('.collapse-arrow');
         if (section.style.display === 'none') {
             section.style.display = 'block';
-            this.textContent = 'Hide';
+            arrow.classList.add('open');
         } else {
             section.style.display = 'none';
-            this.textContent = 'Show';
+            arrow.classList.remove('open');
         }
     });
     
     // Toggle Conversation Analysis visibility
     document.getElementById('toggleConversationBtn').addEventListener('click', function() {
         const section = document.getElementById('conversationAnalysisSection');
+        const arrow = this.querySelector('.collapse-arrow');
         if (section.style.display === 'none') {
             section.style.display = 'block';
-            this.textContent = 'Hide';
+            arrow.classList.add('open');
         } else {
             section.style.display = 'none';
-            this.textContent = 'Show';
-        }
-    });
-    
-    // Toggle Summary visibility
-    document.getElementById('toggleSummaryBtn').addEventListener('click', function() {
-        const section = document.getElementById('summarySection');
-        if (section.style.display === 'none') {
-            section.style.display = 'block';
-            this.textContent = 'Hide';
-        } else {
-            section.style.display = 'none';
-            this.textContent = 'Show';
+            arrow.classList.remove('open');
         }
     });
     
@@ -513,8 +504,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('toggleSpeakerBtn').textContent = 'Show';
         document.getElementById('toggleConversationBtn').textContent = 'Show';
         document.getElementById('summarySection').innerHTML = '';
-        document.getElementById('summarySection').style.display = 'none';
-        document.getElementById('toggleSummaryBtn').textContent = 'Show';
         
         // Presigning URL
         var encodedFilename = encodeURIComponent(fileName);

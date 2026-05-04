@@ -291,18 +291,25 @@ pre {
     position: absolute;
     top: 5px;
     right: 5px;
-    background: #95a5a6;
-    color: white;
+    background: #e0e0e0;
+    color: #555;
     border: none;
     border-radius: 4px;
-    padding: 3px 8px;
-    font-size: 12px;
+    padding: 4px 6px;
+    font-size: 16px;
+    line-height: 1;
     cursor: pointer;
-    opacity: 0.7;
+    opacity: 0.6;
+    transition: opacity 0.15s, background 0.15s;
 }
 .copy-btn:hover {
     opacity: 1;
-    background: #7f8c8d;
+    background: #ccc;
+}
+.copy-btn.copied {
+    opacity: 1;
+    background: #2ecc71;
+    color: white;
 }
 .result-container {
     position: relative;

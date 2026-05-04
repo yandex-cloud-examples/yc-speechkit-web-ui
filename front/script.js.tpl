@@ -423,14 +423,17 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copyJsonBtn').addEventListener('click', function() {
         const resultSttDiv = document.getElementById('resultStt');
         const textToCopy = resultSttDiv.textContent;
+        var btn = this;
         
         navigator.clipboard.writeText(textToCopy).then(function() {
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            setTimeout(() => {
-                this.textContent = originalText;
+            var originalHTML = btn.innerHTML;
+            btn.innerHTML = '&#x2714;';
+            btn.classList.add('copied');
+            setTimeout(function() {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('copied');
             }, 1500);
-        }.bind(this));
+        });
     });
     
     // Toggle Raw JSON visibility

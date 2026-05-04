@@ -105,6 +105,13 @@ h5, h6 {
 .tab-description p:last-child {
     margin-bottom: 0;
 }
+.stt-results-container {
+    margin-top: 24px;
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+}
 textarea, select, input[type="file"], input[type="number"] {
     width: 100%;
     padding: 8px;

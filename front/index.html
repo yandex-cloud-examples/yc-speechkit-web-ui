@@ -110,15 +110,19 @@
         </div>
         
         <div class="tab-content" id="speechToText">
-            <h3>Распознавание аудиофайлов</h3>
+            <div class="tab-description">
+                <p>Распознавание речи (speech-to-text — STT) — это процесс преобразования речи в текст.</p>
+                <p>Загрузите аудиофайл и нажмите <strong>Отправить</strong>.</p>
+            </div>
+
             <form id="audioUploadForm" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="fileInput">Загрузка аудиофайла</label>
+                    <div class="field-annotation">Загрузка аудиофайла</div>
                     <input type="file" id="fileInput" name="file">
                 </div>
                 
                 <div class="form-group">
-                    <label for="languageSelect">Язык</label>
+                    <div class="field-annotation">Язык</div>
                     <select id="languageSelect" name="lang">
                         <option value="ru-RU">Русский</option>
                         <option value="auto">Автоматически</option>
@@ -151,7 +155,8 @@
                 </button>
             </form>
             
-            <h6>Dialogue</h6>
+            <div class="stt-results-container">
+                <h6>Dialogue</h6>
             <div id="dialogueSection" class="dialogue-container"></div>
             
             <h6>
@@ -181,6 +186,7 @@
                     <div id="resultStt" class="bg-light text-monospace text-break" style="max-height: 500px; overflow-y: auto;"></div>
                     <button class="copy-btn" id="copyJsonBtn">Copy</button>
                 </div>
+            </div>
             </div>
         </div>
         

@@ -39,3 +39,4 @@ key.json
 
 # Various
 .DS_Store
+.aider*

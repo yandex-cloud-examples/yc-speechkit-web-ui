@@ -1,5 +1,5 @@
 // Check if STREAM feature is enabled (only in local deployment)
-const STREAM_ENABLED = window.STREAM_ENABLED || false;
+const STREAM_ENABLED = ${stream_enabled};
 
 // Voices and roles dictionary
 const voices = {

@@ -50,41 +50,6 @@ let currentUnsafeMode = false;
 
 // Add CSS for dropdowns
 document.addEventListener('DOMContentLoaded', function() {
-    // Add CSS for custom dropdowns
-    const style = document.createElement('style');
-    style.textContent = `
-        .custom-dropdown {
-            position: relative;
-            display: inline-block;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .dropdown-content a {
-            color: black;
-            padding: 8px 12px;
-            text-decoration: none;
-            display: block;
-            cursor: pointer;
-        }
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
-        .show {
-            display: block;
-        }
-    `;
-    document.head.appendChild(style);
-    
     // Enable STREAM tab if feature is enabled
     if (STREAM_ENABLED) {
         document.body.classList.add('stream-enabled');

@@ -82,14 +82,15 @@
                     <input type="range" id="volumeSlider" min="-145" max="-0.1" step="0.1" value="-19">
                 </div>
                 <div style="margin-top: 8px;">
-                    <button id="resetSlidersBtn" class="btn-secondary" style="font-size: 0.8em; padding: 4px 10px;">Reset</button>
+                    <button id="resetSlidersBtn" class="btn-secondary" style="font-size: 0.8em; padding: 4px 10px;">Сбросить настройки</button>
                 </div>
             </div>
             
             <div style="margin-top: 15px;">
                 <div>
+                    <div class="field-annotation">Режим unsafe<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/concepts/limits.html#speechkit-limits" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">Режим unsafe позволяет увеличить максимальный размер запроса до 5000 символов.</span></a></div>
                     <button id="unsafeModeButton" class="btn-outline-danger">
-                        <span id="unsafeModeLabel">Unsafe Mode</span>
+                        <span id="unsafeModeLabel">Режим unsafe</span>
                     </button>
                     <input type="hidden" id="unsafeMode" name="unsafeMode" value="false">
                 </div>

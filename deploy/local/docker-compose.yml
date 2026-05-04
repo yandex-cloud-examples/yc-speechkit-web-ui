@@ -7,7 +7,7 @@ services:
       dockerfile: Dockerfile
     container_name: speechkit-tts
     environment:
-      - PORT=8001
+      - PORT=8080
       - API_SECRET=${API_SECRET}
       - S3_BUCKET=${S3_BUCKET}
       - S3_KEY=${S3_KEY}
@@ -22,7 +22,7 @@ services:
       dockerfile: Dockerfile
     container_name: speechkit-stt
     environment:
-      - PORT=8002
+      - PORT=8080
       - API_SECRET=${API_SECRET}
       - S3_BUCKET=${S3_BUCKET}
       - S3_KEY=${S3_KEY}

@@ -1,3 +1,6 @@
+// Check if STREAM feature is enabled (only in local deployment)
+const STREAM_ENABLED = window.STREAM_ENABLED || false;
+
 // Voices and roles dictionary
 const voices = {
     lea: ["none"],
@@ -81,6 +84,12 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     `;
     document.head.appendChild(style);
+    
+    // Enable STREAM tab if feature is enabled
+    if (STREAM_ENABLED) {
+        document.body.classList.add('stream-enabled');
+        setupStreamRecognition();
+    }
     
     // Setup tabs
     const tabs = document.querySelectorAll('.tab');
@@ -933,4 +942,164 @@ function checkOperationStatus(operationId) {
     }
     
     checkStatus();
+}
+
+// Streaming recognition variables
+let mediaRecorder;
+let websocket;
+let audioContext;
+let audioWorkletNode;
+let isRecording = false;
+let mediaStream;
+
+function setupStreamRecognition() {
+    document.getElementById('startStreamBtn').addEventListener('click', startStreaming);
+    document.getElementById('stopStreamBtn').addEventListener('click', stopStreaming);
+    document.getElementById('clearStreamBtn').addEventListener('click', function() {
+        document.getElementById('partialText').textContent = '';
+        document.getElementById('finalText').innerHTML = '';
+    });
+}
+
+async function startStreaming() {
+    try {
+        // Request microphone access
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                channelCount: 1,
+                sampleRate: 16000,
+                echoCancellation: true,
+                noiseSuppression: true
+            } 
+        });
+        
+        const lang = document.getElementById('streamLanguageSelect').value;
+        
+        // Create WebSocket connection
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${wsProtocol}//${window.location.host}/stream?lang=${lang}`;
+        websocket = new WebSocket(wsUrl);
+        
+        websocket.onopen = function() {
+            console.log('WebSocket connected');
+            
+            // Setup audio recording
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const source = audioContext.createMediaStreamSource(mediaStream);
+            
+            // Use ScriptProcessorNode for compatibility
+            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+            
+            processor.onaudioprocess = function(e) {
+                if (!isRecording) return;
+                
+                const inputData = e.inputBuffer.getChannelData(0);
+                // Convert Float32Array to Int16Array (LINEAR16_PCM)
+                const int16Data = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, inputData[i]));
+                    int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                
+                // Send audio chunk to backend
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(int16Data.buffer);
+                }
+            };
+            
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+            
+            isRecording = true;
+            document.getElementById('startStreamBtn').disabled = true;
+            document.getElementById('stopStreamBtn').disabled = false;
+            document.getElementById('partialText').textContent = 'Слушаю...';
+        };
+        
+        websocket.onmessage = function(event) {
+            try {
+                const result = JSON.parse(event.data);
+                
+                if (result.type === 'error') {
+                    console.error('Recognition error:', result.message);
+                    document.getElementById('partialText').textContent = 'Ошибка: ' + result.message;
+                    document.getElementById('partialText').style.color = '#e74c3c';
+                    return;
+                }
+                
+                if (result.type === 'partial' && result.alternatives && result.alternatives.length > 0) {
+                    document.getElementById('partialText').textContent = result.alternatives[0];
+                    document.getElementById('partialText').style.color = '#7f8c8d';
+                } else if (result.type === 'final' && result.alternatives && result.alternatives.length > 0) {
+                    const finalDiv = document.getElementById('finalText');
+                    const p = document.createElement('p');
+                    p.textContent = result.alternatives[0];
+                    p.style.marginBottom = '8px';
+                    p.style.paddingBottom = '8px';
+                    p.style.borderBottom = '1px solid #eee';
+                    finalDiv.appendChild(p);
+                    document.getElementById('partialText').textContent = '';
+                    
+                    // Auto-scroll to bottom
+                    const streamResults = document.getElementById('streamResults');
+                    streamResults.scrollTop = streamResults.scrollHeight;
+                } else if (result.type === 'final_refinement' && result.alternatives && result.alternatives.length > 0) {
+                    // Update last final text with refined version
+                    const finalDiv = document.getElementById('finalText');
+                    if (finalDiv.lastChild) {
+                        finalDiv.lastChild.textContent = result.alternatives[0];
+                        finalDiv.lastChild.style.fontWeight = 'bold';
+                    }
+                }
+            } catch (e) {
+                console.error('Error parsing WebSocket message:', e);
+            }
+        };
+        
+        websocket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            document.getElementById('partialText').textContent = 'Ошибка соединения';
+            document.getElementById('partialText').style.color = '#e74c3c';
+            stopStreaming();
+        };
+        
+        websocket.onclose = function() {
+            console.log('WebSocket closed');
+            if (isRecording) {
+                stopStreaming();
+            }
+        };
+        
+    } catch (error) {
+        console.error('Error accessing microphone:', error);
+        alert('Не удалось получить доступ к микрофону. Проверьте разрешения браузера.');
+    }
+}
+
+function stopStreaming() {
+    isRecording = false;
+    
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        websocket.send('END');
+        websocket.close();
+    }
+    websocket = null;
+    
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+    
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+    }
+    
+    document.getElementById('startStreamBtn').disabled = false;
+    document.getElementById('stopStreamBtn').disabled = true;
+    
+    const partialText = document.getElementById('partialText');
+    if (partialText.textContent === 'Слушаю...') {
+        partialText.textContent = '';
+    }
 }

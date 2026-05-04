@@ -249,6 +249,12 @@
         .dialogue-clearfix {
             clear: both;
         }
+        .stream-only {
+            display: none;
+        }
+        .stream-enabled .stream-only {
+            display: block;
+        }
         .analysis-section {
             display: none;
             margin-top: 10px;
@@ -325,6 +331,7 @@
         <div class="tabs">
             <div class="tab active" data-tab="textToSpeech">TTS</div>
             <div class="tab" data-tab="speechToText">STT</div>
+            <div class="tab stream-only" data-tab="streamRecognition">STREAM</div>
         </div>
         
         <!-- Tab content -->
@@ -476,8 +483,41 @@
                 </div>
             </div>
         </div>
+        
+        <div class="tab-content" id="streamRecognition">
+            <h3>Потоковое распознавание речи</h3>
+            
+            <div class="form-group">
+                <label for="streamLanguageSelect">Язык</label>
+                <select id="streamLanguageSelect">
+                    <option value="ru-RU">Русский</option>
+                    <option value="en-US">Английский</option>
+                    <option value="kk-KZ">Казахский</option>
+                    <option value="tr-TR">Турецкий</option>
+                    <option value="uz-UZ">Узбекский</option>
+                    <option value="de-DE">Немецкий</option>
+                    <option value="es-ES">Испанский</option>
+                    <option value="fr-FR">Французский</option>
+                    <option value="it-IT">Итальянский</option>
+                    <option value="pl-PL">Польский</option>
+                </select>
+            </div>
+            
+            <div style="margin-top: 15px;">
+                <button id="startStreamBtn" class="btn-success">Начать запись</button>
+                <button id="stopStreamBtn" class="btn-danger" disabled>Остановить</button>
+                <button id="clearStreamBtn" class="btn-secondary">Очистить</button>
+            </div>
+            
+            <h6 style="margin-top: 20px;">Результаты распознавания</h6>
+            <div id="streamResults" class="bg-light" style="min-height: 200px; padding: 15px; margin-top: 10px;">
+                <div id="partialText" style="color: #7f8c8d; font-style: italic; min-height: 20px;"></div>
+                <div id="finalText" style="margin-top: 10px;"></div>
+            </div>
+        </div>
     </div>
     
+    <script src="stream-config.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

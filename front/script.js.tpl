@@ -858,12 +858,58 @@ function checkOperationStatus(operationId) {
                         card.className = 'analysis-card';
                         
                         summaryData.results.forEach(function(item) {
-                            const p = document.createElement('p');
-                            p.style.margin = '0 0 8px 0';
-                            p.style.fontSize = '0.85rem';
-                            p.style.lineHeight = '1.5';
-                            p.textContent = item.response || '';
-                            card.appendChild(p);
+                            var responseText = item.response || '';
+                            
+                            // Try to parse as JSON and extract text field
+                            try {
+                                var parsed = JSON.parse(responseText);
+                                if (typeof parsed === 'object' && parsed !== null) {
+                                    // If it has a "text" field, use that as the main content
+                                    if (parsed.text) {
+                                        const p = document.createElement('p');
+                                        p.style.margin = '0 0 8px 0';
+                                        p.style.fontSize = '0.85rem';
+                                        p.style.lineHeight = '1.5';
+                                        p.textContent = parsed.text;
+                                        card.appendChild(p);
+                                        
+                                        // Show remaining fields if any
+                                        var remaining = Object.assign({}, parsed);
+                                        delete remaining.text;
+                                        if (Object.keys(remaining).length > 0) {
+                                            var extra = document.createElement('pre');
+                                            extra.style.margin = '4px 0 8px 0';
+                                            extra.style.fontSize = '0.78rem';
+                                            extra.style.color = '#555';
+                                            extra.style.background = '#f0f0f0';
+                                            extra.style.padding = '8px 10px';
+                                            extra.style.borderRadius = '4px';
+                                            extra.style.whiteSpace = 'pre-wrap';
+                                            extra.textContent = JSON.stringify(remaining, null, 2);
+                                            card.appendChild(extra);
+                                        }
+                                    } else {
+                                        // Valid JSON but no "text" field — pretty-print it
+                                        var pre = document.createElement('pre');
+                                        pre.style.margin = '0 0 8px 0';
+                                        pre.style.fontSize = '0.82rem';
+                                        pre.style.lineHeight = '1.5';
+                                        pre.style.whiteSpace = 'pre-wrap';
+                                        pre.textContent = JSON.stringify(parsed, null, 2);
+                                        card.appendChild(pre);
+                                    }
+                                } else {
+                                    throw new Error('not an object');
+                                }
+                            } catch (e) {
+                                // Not valid JSON — display as plain text
+                                const p = document.createElement('p');
+                                p.style.margin = '0 0 8px 0';
+                                p.style.fontSize = '0.85rem';
+                                p.style.lineHeight = '1.5';
+                                p.textContent = responseText;
+                                card.appendChild(p);
+                            }
                         });
                         
                         if (summaryData.content_usage) {

@@ -53,14 +53,13 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ../../front:/usr/share/nginx/html:ro
       - ../../front/script.js.tpl:/tmp/script.js.tpl:ro
-      - ./stream-enabled.js:/tmp/stream-config.js:ro
       - script-volume:/usr/share/nginx/html-rw
     environment:
       - api_gw=${PUBLIC_URL:-http://localhost:8080}
+      - stream_enabled=true
     command: >
       sh -c "cp -r /usr/share/nginx/html/* /usr/share/nginx/html-rw/ &&
              envsubst < /tmp/script.js.tpl > /usr/share/nginx/html-rw/script.js &&
-             cp /tmp/stream-config.js /usr/share/nginx/html-rw/stream-config.js &&
              nginx -g 'daemon off;'"
     depends_on:
       - tts

@@ -447,3 +447,18 @@ pre {
 .show {
     display: block;
 }
+footer {
+    text-align: center;
+    padding: 16px 24px;
+    font-size: 13px;
+    color: #7f8c8d;
+}
+footer a {
+    color: #7f8c8d;
+    text-decoration: none;
+    margin: 0 12px;
+}
+footer a:hover {
+    color: #3498db;
+    text-decoration: underline;
+}

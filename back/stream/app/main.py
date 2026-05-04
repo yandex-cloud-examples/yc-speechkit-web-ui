@@ -1,5 +1,5 @@
 import asyncio
-import grpc
+import grpc.aio  # Changed from grpc
 import json
 import logging
 import os
@@ -31,21 +31,20 @@ async def after_server_start(app, loop):
 @app.websocket('/stream')
 async def stream_recognize(request, ws):
     logging.info("WebSocket connection established")
-    
+
     # Get language from query parameter (default: ru-RU)
     lang = request.args.get('lang', 'ru-RU')
     logging.info(f"Language: {lang}")
-    
+
+    channel = None
+
     try:
-        # Establish gRPC connection to Yandex SpeechKit
+        # Establish async gRPC connection to Yandex SpeechKit
         cred = grpc.ssl_channel_credentials()
-        channel = grpc.secure_channel(STT_GRPC_ENDPOINT, cred)
+        channel = grpc.aio.secure_channel(STT_GRPC_ENDPOINT, cred)
         stub = stt_service_pb2_grpc.RecognizerStub(channel)
-        
-        # Queue for audio chunks
-        audio_queue = asyncio.Queue()
-        
-        # Generator for sending audio chunks to API
+
+        # Async generator for sending audio chunks to API
         async def audio_generator():
             # Send initial config
             recognize_options = stt_pb2.StreamingOptions(
@@ -70,80 +69,60 @@ async def stream_recognize(request, ws):
                 )
             )
             yield stt_pb2.StreamingRequest(session_options=recognize_options)
-            
-            # Receive audio chunks from queue and forward to API
-            while True:
-                data = await audio_queue.get()
-                if data is None:  # End signal
-                    break
-                yield stt_pb2.StreamingRequest(chunk=stt_pb2.AudioChunk(data=data))
-        
-        # Task to receive audio from WebSocket
-        async def receive_audio():
+
+            # Receive audio chunks from WebSocket and forward to API
             try:
-                while True:
-                    data = await ws.recv()
+                async for data in ws:
                     if isinstance(data, str):
                         if data == 'END':
                             logging.info("Received END signal")
-                            await audio_queue.put(None)
                             break
                     else:
                         # Binary audio data
-                        await audio_queue.put(data)
+                        yield stt_pb2.StreamingRequest(chunk=stt_pb2.AudioChunk(data=data))
             except Exception as e:
-                logging.error(f"Error receiving audio: {e}")
-                await audio_queue.put(None)
-        
-        # Task to send recognition results
-        async def send_results():
-            try:
-                # Start streaming recognition
-                responses = stub.RecognizeStreaming(
-                    audio_generator(),
-                    metadata=(('authorization', f'Api-Key {config["api_key_secret"]}'),)
-                )
-                
-                # Send recognition results back to browser
-                for response in responses:
-                    event_type = response.WhichOneof('Event')
-                    result = {
-                        'type': event_type,
-                        'alternatives': []
-                    }
-                    
-                    if event_type == 'partial' and len(response.partial.alternatives) > 0:
-                        result['alternatives'] = [a.text for a in response.partial.alternatives]
-                    elif event_type == 'final':
-                        result['alternatives'] = [a.text for a in response.final.alternatives]
-                    elif event_type == 'final_refinement':
-                        result['alternatives'] = [a.text for a in response.final_refinement.normalized_text.alternatives]
-                    elif event_type == 'eou_update':
-                        result['eou_update'] = True
-                    elif event_type == 'status_code':
-                        result['status_code'] = response.status_code.code_type
-                    
-                    await ws.send(json.dumps(result))
-                    
-            except grpc.RpcError as e:
-                logging.error(f"gRPC error: code={e.code()}, details={e.details()}")
-                await ws.send(json.dumps({
-                    'type': 'error',
-                    'message': f'Recognition error: {e.details()}'
-                }))
-            except Exception as e:
-                logging.error(f"Error in send_results: {e}")
-                await ws.send(json.dumps({
-                    'type': 'error',
-                    'message': str(e)
-                }))
-        
-        # Run both tasks concurrently
-        await asyncio.gather(
-            receive_audio(),
-            send_results()
+                logging.error(f"Error in audio_generator: {e}")
+
+        # Start async streaming recognition
+        call = stub.RecognizeStreaming(
+            audio_generator(),
+            metadata=(('authorization', f'Api-Key {config["api_key_secret"]}'),)
         )
-        
+
+        # Process recognition results
+        async for response in call:
+            try:
+                event_type = response.WhichOneof('Event')
+                result = {
+                    'type': event_type,
+                    'alternatives': []
+                }
+
+                if event_type == 'partial' and len(response.partial.alternatives) > 0:
+                    result['alternatives'] = [a.text for a in response.partial.alternatives]
+                elif event_type == 'final':
+                    result['alternatives'] = [a.text for a in response.final.alternatives]
+                elif event_type == 'final_refinement':
+                    result['alternatives'] = [a.text for a in response.final_refinement.normalized_text.alternatives]
+                elif event_type == 'eou_update':
+                    result['eou_update'] = True
+                elif event_type == 'status_code':
+                    result['status_code'] = response.status_code.code_type
+
+                await ws.send(json.dumps(result))
+
+            except Exception as e:
+                logging.error(f"Error processing response: {e}")
+
+    except grpc.aio.AioRpcError as e:
+        logging.error(f"gRPC error: code={e.code()}, details={e.details()}")
+        try:
+            await ws.send(json.dumps({
+                'type': 'error',
+                'message': f'Recognition error: {e.details()}'
+            }))
+        except:
+            pass
     except Exception as e:
         logging.error(f"WebSocket error: {e}")
         try:
@@ -154,6 +133,8 @@ async def stream_recognize(request, ws):
         except:
             pass
     finally:
+        if channel:
+            await channel.close()
         logging.info("WebSocket connection closed")
 
 if __name__ == "__main__":

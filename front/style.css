@@ -64,17 +64,29 @@ h5, h6 {
     margin-bottom: 20px;
 }
 .tab {
-    padding: 10px 15px;
+    padding: 10px 20px;
     cursor: pointer;
     background: #f8f8f8;
     border: 1px solid #ddd;
     border-bottom: none;
     margin-right: 5px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #555;
+    border-radius: 6px 6px 0 0;
+    outline: none;
+    transition: background 0.15s, color 0.15s;
 }
 .tab.active {
     background: white;
     border-bottom: 1px solid white;
     margin-bottom: -1px;
+    color: #2c3e50;
+    font-weight: 600;
+}
+.tab:hover:not(.active) {
+    background: #eef2f5;
+    color: #333;
 }
 .tab-content {
     display: none;

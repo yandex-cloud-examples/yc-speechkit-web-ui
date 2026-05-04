@@ -1,65 +1,49 @@
-# Deployment Guide
+# С помощью Terraform в Yandex Cloud
 
-This directory contains the Terraform configuration for deploying the SpeechKit Web UI application.
+<img
+  src="../images/diagram.png"
+  alt="SpeechKit Web UI"
+  title="SpeechKit Web UI"
+  style="display: inline-block; margin: 0 auto; max-width: 400px">
 
-## Prerequisites
+## Установка
 
-- Terraform installed
-- Yandex Cloud account with appropriate permissions
-- Service account authorized key file (`key.json`)
-
-## Directory Structure
-
+Чтобы запустить данный модуль, создайте файл с переменными `private.auto.tfvars` и сохраните в него folder_id и cloud_id вашего облака и каталога:
 ```
-deploy/
-├── terraform/
-│   ├── provider.tf
-│   ├── variables.tf
-│   ├── main.tf
-│   ├── back.tf
-│   ├── front.tf
-│   ├── outputs.tf
-│   └── key.json (you need to create this)
-└── README.md (this file)
+cloud_id  = "b1g3xxxxxx"
+folder_id = "b1g7xxxxxx
 ```
 
-## Deployment Steps
+Также [создайте](https://yandex.cloud/ru/docs/iam/operations/authorized-key/create) авторизованный ключ `key.json` и сохраните в папку `deploy/terraform`, рядом с другими .tf файлами.
 
-1. Navigate to the terraform directory:
-   ```bash
-   cd deploy/terraform
-   ```
+После этого, можно установить модуль Terraform:
+```
+cd deploy/terraform
+terraform init
+terraform apply
+```
 
-2. Create the `private.auto.tfvars` file with your cloud and folder IDs:
-   ```hcl
-   cloud_id  = "b1g3xxxxxx"
-   folder_id = "b1g7xxxxxx"
-   ```
+## Использование
 
-3. Create the authorized key file `key.json` in the `deploy/terraform` directory.
+После установки, будут отображены следующие Outputs:
 
-4. Initialize and apply Terraform:
-   ```bash
-   terraform init
-   terraform apply
-   ```
+```
+api-gw = "https://d5dclvvxxx.apigw.yandexcloud.net"
+bucket = "https://speechbench-xxx.website.yandexcloud.net"
+```
 
-5. After successful deployment, Terraform will output the URLs for:
-   - The web application (bucket URL)
-   - The API Gateway
+Необходимо открыть ссылку bucket в веб-браузере.
+В веб-приложении есть две вкладки, соответствующие возможностям TTS и STT.
+Первый запрос может занимает больше времени, так как в этот момент запускается контейнер в первый раз.
 
-## Cleanup
+Результаты синтеза сохраняются в бакет, в директории `audio`, а последнее полученное аудио, в случае успеха, доступно для прослушивания на веб-сайте.
 
-To remove all created resources:
+Аудиофайлы, отправленные на распознавание, сохраняются в директории `upload`. Результаты распознавания выводятся в веб-интерфейсе: в виде JSON ответа, и в виде просуммированного ключа `text` из JSON ответа, для каждого из аудио-каналов.
 
-1. Navigate to the terraform directory:
-   ```bash
-   cd deploy/terraform
-   ```
+## Удаление
 
-2. Empty the created bucket manually (Terraform cannot destroy non-empty buckets)
-
-3. Run:
-   ```bash
-   terraform destroy
-   ```
+Перед удалением, не забудьте очистить созданный бакет (иначе процесс удаления прервется):
+```
+cd deploy/terraform
+terraform destroy
+```

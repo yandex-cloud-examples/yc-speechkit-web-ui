@@ -860,6 +860,11 @@ function checkOperationStatus(operationId) {
                         summaryData.results.forEach(function(item) {
                             var responseText = item.response || '';
                             
+                            // Strip markdown code fences if present (e.g. ```json ... ```)
+                            var fenceStart = new RegExp('^' + '`'.repeat(3) + '(?:json)?\\s*\\n?');
+                            var fenceEnd = new RegExp('\\n?' + '`'.repeat(3) + '\\s*$');
+                            responseText = responseText.replace(fenceStart, '').replace(fenceEnd, '').trim();
+                            
                             // Try to parse as JSON and pretty-print it
                             try {
                                 var parsed = JSON.parse(responseText);

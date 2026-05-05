@@ -1044,10 +1044,10 @@ async function startStreaming() {
                     document.getElementById('partialText').style.color = '';
                 } else if (result.type === 'final' && result.alternatives && result.alternatives.length > 0) {
                     const finalDiv = document.getElementById('finalText');
-                    const span = document.createElement('span');
-                    span.className = 'stream-final';
-                    span.textContent = result.alternatives[0] + ' ';
-                    finalDiv.appendChild(span);
+                    const p = document.createElement('p');
+                    p.className = 'stream-final';
+                    p.textContent = result.alternatives[0];
+                    finalDiv.appendChild(p);
                     document.getElementById('partialText').textContent = '';
                     
                     // Auto-scroll to bottom

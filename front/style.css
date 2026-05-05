@@ -264,15 +264,14 @@ label {
     border-bottom: none !important;
 }
 #streamResults p {
-    display: inline;
-    margin: 0 !important;
+    display: block;
+    margin: 0 0 4px 0 !important;
     padding: 0 !important;
     border: none !important;
     font-weight: normal !important;
 }
 #finalText {
     color: #222;
-    display: inline;
 }
 #finalText .stream-final {
     color: #222;
@@ -282,11 +281,11 @@ label {
     border: none;
 }
 #partialText {
-    display: inline;
     color: #bbb;
     font-style: italic;
     font-weight: normal;
     transition: opacity 0.2s ease;
+    margin-top: 4px !important;
 }
 pre {
     white-space: pre-wrap;

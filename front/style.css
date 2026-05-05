@@ -96,8 +96,14 @@ h5, h6 {
     display: block;
 }
 .tab-description {
-    color: #7f8c8d;
+    background: #eef6fb;
+    border-left: 3px solid #3498db;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    color: #2c3e50;
     margin-bottom: 32px;
+    font-size: 0.9rem;
+    line-height: 1.6;
 }
 .tab-description p {
     margin: 0 0 4px 0;

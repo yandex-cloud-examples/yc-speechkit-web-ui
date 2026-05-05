@@ -643,15 +643,22 @@ function checkOperationStatus(operationId) {
                     result.sort(function(a, b) {
                         var aAlt = (a.alternatives && a.alternatives[0]) ? a.alternatives[0] : null;
                         var bAlt = (b.alternatives && b.alternatives[0]) ? b.alternatives[0] : null;
-                        var aTime = aAlt ? (parseInt(aAlt.startTimeMs) || 0) : 0;
-                        var bTime = bAlt ? (parseInt(bAlt.startTimeMs) || 0) : 0;
-                        // Fall back to first word's start_time_ms if alternative-level time is 0
-                        if (aTime === 0 && aAlt && aAlt.words && aAlt.words.length > 0) {
+
+                        // Prefer first word's start_time_ms (most reliable), fall back to alternative-level startTimeMs
+                        var aTime = 0;
+                        if (aAlt && aAlt.words && aAlt.words.length > 0) {
                             aTime = parseInt(aAlt.words[0].start_time_ms) || 0;
+                        } else if (aAlt) {
+                            aTime = parseInt(aAlt.startTimeMs) || 0;
                         }
-                        if (bTime === 0 && bAlt && bAlt.words && bAlt.words.length > 0) {
+
+                        var bTime = 0;
+                        if (bAlt && bAlt.words && bAlt.words.length > 0) {
                             bTime = parseInt(bAlt.words[0].start_time_ms) || 0;
+                        } else if (bAlt) {
+                            bTime = parseInt(bAlt.startTimeMs) || 0;
                         }
+
                         return aTime - bTime;
                     });
 

@@ -262,19 +262,12 @@ label {
     font-size: 1.25rem;
     line-height: 1.8;
 }
-#streamResults * {
-    margin: 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    font-weight: normal !important;
-    border-bottom: none !important;
-}
 #streamResults p {
     display: block;
-    margin: 0 0 4px 0 !important;
-    padding: 0 !important;
-    border: none !important;
-    font-weight: normal !important;
+    margin: 0 0 4px 0;
+    padding: 0;
+    border: none;
+    font-weight: normal;
 }
 #finalText {
     color: #222;

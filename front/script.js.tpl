@@ -956,6 +956,88 @@ function checkOperationStatus(operationId) {
     checkStatus();
 }
 
+function renderStreamSummary(summaryData) {
+    const section = document.getElementById('streamSummarySection');
+    section.innerHTML = '';
+
+    if (summaryData && summaryData.results && summaryData.results.length > 0) {
+        const card = document.createElement('div');
+        card.className = 'analysis-card stream-summary';
+
+        summaryData.results.forEach(function(item) {
+            var responseText = item.response || '';
+
+            // Strip markdown code fences if present
+            var fenceStart = new RegExp('^' + '`'.repeat(3) + '(?:json)?\\s*\\n?');
+            var fenceEnd = new RegExp('\\n?' + '`'.repeat(3) + '\\s*$');
+            responseText = responseText.replace(fenceStart, '').replace(fenceEnd, '').trim();
+
+            // Try to parse as JSON and pretty-print it
+            try {
+                var parsed = JSON.parse(responseText);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    Object.keys(parsed).forEach(function(key) {
+                        var val = parsed[key];
+                        var wrapper = document.createElement('div');
+                        wrapper.style.margin = '0 0 10px 0';
+
+                        var label = document.createElement('div');
+                        label.style.fontSize = '0.75rem';
+                        label.style.fontWeight = '600';
+                        label.style.color = '#7f8c8d';
+                        label.style.textTransform = 'uppercase';
+                        label.style.letterSpacing = '0.5px';
+                        label.style.marginBottom = '2px';
+                        label.textContent = key;
+                        wrapper.appendChild(label);
+
+                        var content = document.createElement('p');
+                        content.style.margin = '0';
+                        content.style.fontSize = '0.85rem';
+                        content.style.lineHeight = '1.5';
+                        if (typeof val === 'string') {
+                            content.textContent = val;
+                        } else {
+                            content.style.fontFamily = 'monospace';
+                            content.style.whiteSpace = 'pre-wrap';
+                            content.textContent = JSON.stringify(val, null, 2);
+                        }
+                        wrapper.appendChild(content);
+                        card.appendChild(wrapper);
+                    });
+                } else {
+                    throw new Error('not an object');
+                }
+            } catch (e) {
+                var p = document.createElement('p');
+                p.style.margin = '0 0 8px 0';
+                p.style.fontSize = '0.85rem';
+                p.style.lineHeight = '1.5';
+                p.textContent = responseText;
+                card.appendChild(p);
+            }
+        });
+
+        if (summaryData.content_usage) {
+            var usage = document.createElement('div');
+            usage.style.fontSize = '0.75rem';
+            usage.style.color = '#7f8c8d';
+            usage.style.marginTop = '8px';
+            usage.style.borderTop = '1px solid #d4edda';
+            usage.style.paddingTop = '6px';
+            usage.textContent = 'Tokens: ' +
+                (summaryData.content_usage.input_text_tokens || 0) + ' input, ' +
+                (summaryData.content_usage.completion_tokens || 0) + ' completion, ' +
+                (summaryData.content_usage.total_tokens || 0) + ' total';
+            card.appendChild(usage);
+        }
+
+        section.appendChild(card);
+    } else {
+        section.innerHTML = '<div class="analysis-card stream-summary">No summarization data available.</div>';
+    }
+}
+
 // Streaming recognition variables
 let mediaRecorder;
 let websocket;
@@ -970,6 +1052,7 @@ function setupStreamRecognition() {
     document.getElementById('clearStreamBtn').addEventListener('click', function() {
         document.getElementById('partialText').textContent = '';
         document.getElementById('finalText').innerHTML = '';
+        document.getElementById('streamSummarySection').innerHTML = '';
     });
 }
 
@@ -986,10 +1069,17 @@ async function startStreaming() {
         });
         
         const lang = document.getElementById('streamLanguageSelect').value;
+        const streamSummaryInstruction = document.getElementById('streamSummaryInstructionInput').value;
+        
+        // Clear previous summary
+        document.getElementById('streamSummarySection').innerHTML = '';
         
         // Create WebSocket connection
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = wsProtocol + '//' + window.location.host + '/stream?lang=' + lang;
+        let wsUrl = wsProtocol + '//' + window.location.host + '/stream?lang=' + lang;
+        if (streamSummaryInstruction) {
+            wsUrl += '&summaryInstruction=' + encodeURIComponent(streamSummaryInstruction);
+        }
         websocket = new WebSocket(wsUrl);
         
         websocket.onopen = function() {
@@ -1071,6 +1161,8 @@ async function startStreaming() {
                     if (text && finalDiv.lastElementChild && finalDiv.lastElementChild.classList.contains('stream-final')) {
                         finalDiv.lastElementChild.textContent = text;
                     }
+                } else if (result.type === 'summarization' && result.summarization) {
+                    renderStreamSummary(result.summarization);
                 }
             } catch (e) {
                 console.error('Error parsing WebSocket message:', e);

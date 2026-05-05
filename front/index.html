@@ -193,6 +193,11 @@
             </div>
             
             <div class="form-group">
+                <div class="field-annotation">Промпт модели<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/stt/llm-results.html" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">Промпт для обработки результатов распознавания с помощью LLM. Результат суммаризации будет получен после остановки записи.</span></a></div>
+                <textarea id="streamSummaryInstructionInput" rows="3" style="font-size: 0.85rem;">Кратко суммируй следующий диалог. Выдели ключевые моменты обсуждения и итог.</textarea>
+            </div>
+
+            <div class="form-group">
                 <div class="field-annotation">Язык<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/stt/models#languages" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">Выберите язык для потокового распознавания</span></a></div>
                 <select id="streamLanguageSelect">
                     <option value="ru-RU">Русский</option>
@@ -219,6 +224,9 @@
                 <div id="finalText"></div>
                 <div id="partialText" style="color: #7f8c8d; font-style: italic;"></div>
             </div>
+
+            <div class="field-annotation" style="margin-top: 20px;">Результат обработки LLM<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/stt/llm-results.html" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">Результат суммаризации потокового распознавания. Данные поступают после завершения записи.</span></a></div>
+            <div id="streamSummarySection" class="analysis-section" style="display: block;"></div>
         </div>
     </div>
 

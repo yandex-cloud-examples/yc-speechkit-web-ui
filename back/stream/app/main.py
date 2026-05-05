@@ -16,6 +16,7 @@ logging.getLogger().setLevel(logging.INFO)
 # Variables
 config = {
     'api_key_secret': os.environ['API_SECRET'],
+    'model_uri': os.environ.get('MODEL_URI', ''),
 }
 
 STT_GRPC_ENDPOINT = "stt.api.cloud.yandex.net:443"
@@ -34,7 +35,8 @@ async def stream_recognize(request, ws):
 
     # Get language from query parameter (default: ru-RU)
     lang = request.args.get('lang', 'ru-RU')
-    logging.info(f"Language: {lang}")
+    summary_instruction = request.args.get('summaryInstruction', '')
+    logging.info(f"Language: {lang}, summaryInstruction: {bool(summary_instruction)}")
 
     channel = None
 
@@ -47,27 +49,39 @@ async def stream_recognize(request, ws):
         # Async generator for sending audio chunks to API
         async def audio_generator():
             # Send initial config
-            recognize_options = stt_pb2.StreamingOptions(
-                recognition_model=stt_pb2.RecognitionModelOptions(
-                    audio_format=stt_pb2.AudioFormatOptions(
-                        raw_audio=stt_pb2.RawAudio(
-                            audio_encoding=stt_pb2.RawAudio.LINEAR16_PCM,
-                            sample_rate_hertz=16000,
-                            audio_channel_count=1
-                        )
-                    ),
-                    text_normalization=stt_pb2.TextNormalizationOptions(
-                        text_normalization=stt_pb2.TextNormalizationOptions.TEXT_NORMALIZATION_ENABLED,
-                        profanity_filter=True,
-                        literature_text=False
-                    ),
-                    language_restriction=stt_pb2.LanguageRestrictionOptions(
-                        restriction_type=stt_pb2.LanguageRestrictionOptions.WHITELIST,
-                        language_code=[lang]
-                    ),
-                    audio_processing_type=stt_pb2.RecognitionModelOptions.REAL_TIME
-                )
+            recognition_model = stt_pb2.RecognitionModelOptions(
+                audio_format=stt_pb2.AudioFormatOptions(
+                    raw_audio=stt_pb2.RawAudio(
+                        audio_encoding=stt_pb2.RawAudio.LINEAR16_PCM,
+                        sample_rate_hertz=16000,
+                        audio_channel_count=1
+                    )
+                ),
+                text_normalization=stt_pb2.TextNormalizationOptions(
+                    text_normalization=stt_pb2.TextNormalizationOptions.TEXT_NORMALIZATION_ENABLED,
+                    profanity_filter=True,
+                    literature_text=False
+                ),
+                language_restriction=stt_pb2.LanguageRestrictionOptions(
+                    restriction_type=stt_pb2.LanguageRestrictionOptions.WHITELIST,
+                    language_code=[lang]
+                ),
+                audio_processing_type=stt_pb2.RecognitionModelOptions.REAL_TIME
             )
+
+            session_kwargs = {
+                'recognition_model': recognition_model,
+            }
+
+            # Add summarization if instruction and model_uri are provided
+            if summary_instruction and config['model_uri']:
+                session_kwargs['summarization_options'] = stt_pb2.SummarizationOptions(
+                    summarization_model_uri=config['model_uri'],
+                    instruction=summary_instruction,
+                )
+                logging.info("Summarization enabled for this session")
+
+            recognize_options = stt_pb2.StreamingOptions(**session_kwargs)
             yield stt_pb2.StreamingRequest(session_options=recognize_options)
 
             # Receive audio chunks from WebSocket and forward to API
@@ -108,6 +122,24 @@ async def stream_recognize(request, ws):
                     result['eou_update'] = True
                 elif event_type == 'status_code':
                     result['status_code'] = response.status_code.code_type
+                elif event_type == 'summarization':
+                    summarization = response.summarization
+                    result['summarization'] = {
+                        'results': [],
+                    }
+                    if hasattr(summarization, 'results'):
+                        for item in summarization.results:
+                            result['summarization']['results'].append({
+                                'response': item.response if hasattr(item, 'response') else '',
+                            })
+                    if hasattr(summarization, 'content_usage'):
+                        cu = summarization.content_usage
+                        result['summarization']['content_usage'] = {
+                            'input_text_tokens': cu.input_text_tokens if hasattr(cu, 'input_text_tokens') else 0,
+                            'completion_tokens': cu.completion_tokens if hasattr(cu, 'completion_tokens') else 0,
+                            'total_tokens': cu.total_tokens if hasattr(cu, 'total_tokens') else 0,
+                        }
+                    logging.info(f"Summarization result received")
 
                 await ws.send(json.dumps(result))
 

@@ -523,7 +523,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Clear example selection when user picks their own file
         if (file) {
             sttExampleKey = null;
-            document.getElementById('sttExampleLabel').style.display = 'none';
             document.getElementById('sttExampleMono').classList.remove('btn-success');
             document.getElementById('sttExampleMono').classList.add('btn-secondary');
             document.getElementById('sttExampleStereo').classList.remove('btn-success');
@@ -532,33 +531,26 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // STT example buttons
-    function selectSttExample(key, label) {
+    function selectSttExample(key, buttonId) {
         sttExampleKey = key;
         document.getElementById('fileInput').value = '';
         document.getElementById('rateForm').classList.add('hidden');
         document.getElementById('sampleRateInput').value = '48000';
-        document.getElementById('sttExampleLabel').textContent = '✓ ' + label;
-        document.getElementById('sttExampleLabel').style.display = 'inline';
         // Highlight active button
         document.getElementById('sttExampleMono').classList.remove('btn-success');
         document.getElementById('sttExampleMono').classList.add('btn-secondary');
         document.getElementById('sttExampleStereo').classList.remove('btn-success');
         document.getElementById('sttExampleStereo').classList.add('btn-secondary');
-        if (key === 'examples/example-mono.mp3') {
-            document.getElementById('sttExampleMono').classList.remove('btn-secondary');
-            document.getElementById('sttExampleMono').classList.add('btn-success');
-        } else {
-            document.getElementById('sttExampleStereo').classList.remove('btn-secondary');
-            document.getElementById('sttExampleStereo').classList.add('btn-success');
-        }
+        document.getElementById(buttonId).classList.remove('btn-secondary');
+        document.getElementById(buttonId).classList.add('btn-success');
     }
 
     document.getElementById('sttExampleMono').addEventListener('click', function() {
-        selectSttExample('example-mono.mp3', 'example-mono.mp3');
+        selectSttExample('example-mono.mp3', 'sttExampleMono');
     });
 
     document.getElementById('sttExampleStereo').addEventListener('click', function() {
-        selectSttExample('example-stereo.mp3', 'example-stereo.mp3');
+        selectSttExample('example-stereo.mp3', 'sttExampleStereo');
     });
     
     // STT form submission

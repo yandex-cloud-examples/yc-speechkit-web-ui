@@ -47,6 +47,7 @@ resource "yandex_storage_object" "script" {
   content = templatefile("../../front/script.js.tpl",
     {
       api_gw   = "https://${yandex_api_gateway.api-gw.domain}",
+      stream_enabled = false
     }
   )
 }

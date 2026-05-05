@@ -1178,8 +1178,11 @@ async function startStreaming() {
         
         websocket.onclose = function() {
             console.log('WebSocket closed');
+            websocket = null;
             if (isRecording) {
-                stopStreaming();
+                isRecording = false;
+                document.getElementById('startStreamBtn').disabled = false;
+                document.getElementById('stopStreamBtn').disabled = true;
             }
         };
         
@@ -1192,20 +1195,32 @@ async function startStreaming() {
 function stopStreaming() {
     isRecording = false;
     
-    if (websocket && websocket.readyState === WebSocket.OPEN) {
-        websocket.send('END');
-        websocket.close();
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
     }
-    websocket = null;
     
     if (audioContext) {
         audioContext.close();
         audioContext = null;
     }
     
-    if (mediaStream) {
-        mediaStream.getTracks().forEach(track => track.stop());
-        mediaStream = null;
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        // Send END but don't close — let the server finish sending
+        // (including summarization), then close from onclose/timeout
+        websocket.send('END');
+        
+        // Safety timeout: if server doesn't close the connection
+        // within 30 seconds (summarization can take time), force close
+        setTimeout(function() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                console.log('Force closing WebSocket after timeout');
+                websocket.close();
+                websocket = null;
+            }
+        }, 30000);
+    } else {
+        websocket = null;
     }
     
     document.getElementById('startStreamBtn').disabled = false;

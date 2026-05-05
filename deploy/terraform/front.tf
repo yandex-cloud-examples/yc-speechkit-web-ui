@@ -52,6 +52,17 @@ resource "yandex_storage_object" "script" {
   )
 }
 
+resource "yandex_storage_object" "examples" {
+  access_key = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+  
+  bucket       = yandex_storage_bucket.front.bucket
+  key          = "examples.json"
+  source       = "../../front/examples.json"
+  source_hash  = filemd5("../../front/examples.json")
+  content_type = "application/json"
+}
+
 resource "yandex_storage_object" "voices" {
   access_key = yandex_iam_service_account_static_access_key.sa-static-key.access_key
   secret_key = yandex_iam_service_account_static_access_key.sa-static-key.secret_key

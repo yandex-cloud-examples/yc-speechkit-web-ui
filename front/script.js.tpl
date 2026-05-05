@@ -42,6 +42,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Load TTS examples
+    var ttsExamples = {};
+    fetch('examples.json')
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            ttsExamples = data;
+        })
+        .catch(function(err) {
+            console.error('Failed to load examples.json:', err);
+        });
+
+    function pasteExample(key) {
+        var text = ttsExamples[key] || '';
+        var textArea = document.getElementById('textInput');
+        textArea.value = text;
+        var maxLength = textArea.getAttribute('maxlength');
+        document.getElementById('charCount').textContent = text.length + '/' + maxLength;
+    }
+
+    document.getElementById('exampleBtn1').addEventListener('click', function() { pasteExample('example-1'); });
+    document.getElementById('exampleBtn2').addEventListener('click', function() { pasteExample('example-2'); });
+    document.getElementById('exampleBtn3').addEventListener('click', function() { pasteExample('example-3'); });
+
     // Load voices data and initialize TTS components
     fetch('voices.json')
         .then(function(resp) { return resp.json(); })

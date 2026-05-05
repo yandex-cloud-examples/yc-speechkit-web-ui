@@ -1044,12 +1044,10 @@ async function startStreaming() {
                     document.getElementById('partialText').style.color = '#7f8c8d';
                 } else if (result.type === 'final' && result.alternatives && result.alternatives.length > 0) {
                     const finalDiv = document.getElementById('finalText');
-                    const p = document.createElement('p');
-                    p.textContent = result.alternatives[0];
-                    p.style.marginBottom = '8px';
-                    p.style.paddingBottom = '8px';
-                    p.style.borderBottom = '1px solid #eee';
-                    finalDiv.appendChild(p);
+                    const span = document.createElement('span');
+                    span.textContent = result.alternatives[0] + ' ';
+                    span.style.color = '#333';
+                    finalDiv.appendChild(span);
                     document.getElementById('partialText').textContent = '';
                     
                     // Auto-scroll to bottom
@@ -1059,8 +1057,7 @@ async function startStreaming() {
                     // Update last final text with refined version
                     const finalDiv = document.getElementById('finalText');
                     if (finalDiv.lastChild) {
-                        finalDiv.lastChild.textContent = result.alternatives[0];
-                        finalDiv.lastChild.style.fontWeight = 'bold';
+                        finalDiv.lastChild.textContent = result.alternatives[0] + ' ';
                     }
                 }
             } catch (e) {

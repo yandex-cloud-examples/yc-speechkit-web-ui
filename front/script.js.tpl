@@ -995,6 +995,14 @@ async function startStreaming() {
         websocket.onopen = function() {
             console.log('WebSocket connected');
             
+            // Add session separator if there are previous results
+            const finalDiv = document.getElementById('finalText');
+            if (finalDiv.children.length > 0) {
+                const sep = document.createElement('hr');
+                sep.className = 'stream-separator';
+                finalDiv.appendChild(sep);
+            }
+            
             // Setup audio recording
             audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
             const source = audioContext.createMediaStreamSource(mediaStream);

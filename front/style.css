@@ -279,13 +279,33 @@ label {
     margin: 0;
     padding: 0;
     border: none;
+    padding-left: 16px !important;
+    position: relative;
+}
+#finalText .stream-final::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.65em;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #2ecc71;
+}
+#finalText .stream-separator {
+    border: none !important;
+    border-top: 1px dashed #ddd !important;
+    margin: 12px 0 !important;
+    padding: 0 !important;
 }
 #partialText {
     color: #bbb;
     font-style: italic;
     font-weight: normal;
+    font-size: 1.4rem !important;
     transition: opacity 0.2s ease;
-    margin-top: 4px !important;
+    margin-top: 8px !important;
+    padding-left: 16px !important;
 }
 pre {
     white-space: pre-wrap;

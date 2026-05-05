@@ -1,46 +1,17 @@
 // Check if STREAM feature is enabled (only in local deployment)
 const STREAM_ENABLED = ${stream_enabled};
 
-// Voices and roles dictionary
-const voices = {
-    lea: ["none"],
-    john: ["none"],
-    naomi: ["modern", "classic"],
-    amira: ["none"],
-    madi: ["none"],
-    saule: ["neutral", "strict"],
-    zhanar: ["neutral", "friendly"],
-    alena: ["neutral", "good"],
-    filipp: ["none"],
-    ermil: ["neutral", "good"],
-    jane: ["neutral", "good", "evil"],
-    omazh: ["neutral", "evil"],
-    zahar: ["neutral", "good"],
-    dasha: ["neutral", "good", "friendly"],
-    julia: ["neutral", "strict"],
-    lera: ["neutral", "friendly"],
-    masha: ["good", "strict", "friendly"],
-    marina: ["neutral", "whisper", "friendly"],
-    alexander: ["neutral", "good"],
-    kirill: ["neutral", "strict", "good"],
-    anton: ["neutral", "good"],
-    madi_ru: ["none"],
-    saule_ru: ["neutral", "strict", "whisper"],
-    zamira_ru: ["neutral", "strict", "friendly"],
-    zhanar_ru: ["neutral", "strict", "friendly"],
-    yulduz_ru: ["neutral", "strict", "friendly", "whisper"],
-    nigora: ["none"],
-    zamira: ["neutral", "strict", "friendly"],
-    yulduz: ["neutral", "strict", "friendly", "whisper"],
-};
+// Voices and roles dictionary (loaded from voices.json)
+let voicesData = {};
+let voices = {};
 
-// Default values
-const defaultVoice = 'marina';
-const defaultRole = 'neutral';
+// Current TTS language
+let currentTtsLang = 'ru-RU';
 
 // Dropdowns and parameters
 let currentVoice = '';
 let currentRole = '';
+let currentTtsLangLabel = 'Русский';
 let currentSpeed = 1.0;
 let currentPitchShift = 0;
 let currentVolume = -19;
@@ -71,10 +42,44 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Initialize TTS components
-    populateVoicesDropdown();
-    selectDefaultVoice(defaultVoice);
-    
+    // Load voices data and initialize TTS components
+    fetch('voices.json')
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            voicesData = data;
+            switchTtsLanguage(currentTtsLang);
+        })
+        .catch(function(err) {
+            console.error('Failed to load voices.json:', err);
+        });
+
+    // Setup TTS language dropdown
+    document.getElementById('ttsLangDropdown').addEventListener('click', function() {
+        document.getElementById('ttsLangDropdownContent').classList.toggle('show');
+    });
+
+    var ttsLangOptions = [
+        { label: 'Русский', value: 'ru-RU' },
+        { label: 'Английский', value: 'en-US' },
+        { label: 'Казахский', value: 'kz-KZ' },
+        { label: 'Узбекский', value: 'uz-UZ' },
+        { label: 'Турецкий', value: 'tr-TR' },
+        { label: 'Немецкий', value: 'de-DE' },
+    ];
+    var ttsLangDropdownContent = document.getElementById('ttsLangDropdownContent');
+    ttsLangOptions.forEach(function(opt) {
+        var item = document.createElement('a');
+        item.textContent = opt.label;
+        item.onclick = function() {
+            currentTtsLang = opt.value;
+            currentTtsLangLabel = opt.label;
+            document.getElementById('ttsLangDropdown').textContent = opt.label;
+            ttsLangDropdownContent.classList.remove('show');
+            switchTtsLanguage(opt.value);
+        };
+        ttsLangDropdownContent.appendChild(item);
+    });
+
     // Setup dropdown toggles
     document.getElementById('voicesDropdown').addEventListener('click', function() {
         document.getElementById('voicesDropdownContent').classList.toggle('show');
@@ -200,6 +205,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.classList.remove('show');
             }
         }
+        if (!event.target.matches('#ttsLangDropdown')) {
+            const dropdown = document.getElementById('ttsLangDropdownContent');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        }
         if (!event.target.matches('#formatDropdown')) {
             const dropdown = document.getElementById('formatDropdownContent');
             if (dropdown.classList.contains('show')) {
@@ -242,9 +253,27 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Switch TTS language: update voices dict and repopulate dropdowns
+function switchTtsLanguage(lang) {
+    voices = voicesData[lang] || {};
+    populateVoicesDropdown();
+    // Select first available voice
+    var firstVoice = Object.keys(voices)[0];
+    if (firstVoice) {
+        selectDefaultVoice(firstVoice);
+    } else {
+        currentVoice = '';
+        currentRole = '';
+        document.getElementById('voicesDropdown').textContent = 'Голос';
+        document.getElementById('rolesDropdown').textContent = 'Амплуа';
+        document.getElementById('rolesDropdownContent').innerHTML = '';
+    }
+}
+
 // Populating voices dropdown
 function populateVoicesDropdown() {
     const voicesDropdownContent = document.getElementById('voicesDropdownContent');
+    voicesDropdownContent.innerHTML = '';
     for (const voice in voices) {
         const item = document.createElement('a');
         item.textContent = voice;
@@ -270,6 +299,8 @@ function populateRolesDropdown(name) {
     const roles = voices[name];
     const rolesDropdownContent = document.getElementById('rolesDropdownContent');
     rolesDropdownContent.innerHTML = '';
+    
+    if (!roles) return;
     
     roles.forEach((role, index) => {
         const item = document.createElement('a');

@@ -75,9 +75,13 @@ async def stream_recognize(request, ws):
 
             # Add summarization if instruction and model_uri are provided
             if summary_instruction and config['model_uri']:
-                session_kwargs['summarization_options'] = stt_pb2.SummarizationOptions(
-                    summarization_model_uri=config['model_uri'],
-                    instruction=summary_instruction,
+                session_kwargs['summarization'] = stt_pb2.SummarizationOptions(
+                    model_uri=config['model_uri'],
+                    properties=[
+                        stt_pb2.SummarizationProperty(
+                            instruction=summary_instruction
+                        )
+                    ]
                 )
                 logging.info("Summarization enabled for this session")
 

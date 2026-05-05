@@ -246,23 +246,38 @@ label {
     margin-top: 15px;
 }
 #streamResults {
-    background: #fff !important;
+    background: #fff;
     border: 1px solid #eee;
     border-radius: 8px;
     min-height: 250px;
+    max-height: 500px;
+    overflow-y: auto;
     padding: 20px 24px;
-    font-size: 1.2rem;
+    font-size: 1.25rem;
     line-height: 1.8;
+}
+#streamResults * {
+    margin: 0;
+    padding: 0;
+    border: none;
+    font-weight: normal;
 }
 #finalText {
     color: #222;
+    display: inline;
 }
-#finalText span {
+#finalText .stream-final {
     color: #222;
+    font-weight: normal;
+    margin: 0;
+    padding: 0;
+    border: none;
 }
 #partialText {
-    color: #bbb !important;
+    display: inline;
+    color: #bbb;
     font-style: italic;
+    font-weight: normal;
     transition: opacity 0.2s ease;
 }
 pre {

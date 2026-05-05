@@ -572,7 +572,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         key: objectKey,
                         lang: lang,
                         rate: rate,
-                        summaryInstruction: document.getElementById('summaryInstructionInput').value
+                        summaryInstruction: document.getElementById('summaryInstructionInput').value,
+                        speakerLabeling: document.getElementById('speakerLabelingToggle').checked
                     })
                 }).then(response => response.json());
             })

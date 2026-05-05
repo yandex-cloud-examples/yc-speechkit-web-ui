@@ -139,6 +139,14 @@
                     </select>
                 </div>
                 
+                <div class="form-group">
+                    <div class="field-annotation">Определение дикторов<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/stt/speaker-labeling.html" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">SpeechKit в результатах распознавания может указывать, какому из дикторов принадлежит каждая распознанная фраза. Определение дикторов работает для распознавания в режиме FULL_DATA только для монозаписей. В результатах распознавания может быть не больше двух дикторов.</span></a></div>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                        <input type="checkbox" id="speakerLabelingToggle">
+                        Включить определение дикторов
+                    </label>
+                </div>
+
                 <div class="form-group hidden" id="rateForm">
                     <div class="field-annotation">Частота дискретизации (кГц)<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/formats#lpcm" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">В зависимости от используемой дискретизации WAV-файла, выберите значение совпадающее с параметрами файла.</span></a></div>
                     <input type="number" id="sampleRateInput" name="sampleRate" value="48000">

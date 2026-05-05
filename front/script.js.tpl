@@ -608,13 +608,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         if (hasExample) {
-            // Example file is already in S3 — skip upload
-            submitSttRequest(sttExampleKey)
-                .then(response => {
+            // Example file — fetch from web server, upload to S3, then process
+            var exampleFileName = sttExampleKey.split('/').pop();
+            var encodedExampleName = encodeURIComponent(exampleFileName);
+
+            fetch(sttExampleKey)
+                .then(function(resp) { return resp.blob(); })
+                .then(function(blob) {
+                    return fetch(`${api_gw}/presign?fileName=` + encodedExampleName)
+                        .then(function(resp) { return resp.json(); })
+                        .then(function(presignResponse) {
+                            return fetch(presignResponse.url, {
+                                method: 'PUT',
+                                body: blob,
+                                headers: {
+                                    'Content-Type': 'binary/octet-stream'
+                                }
+                            }).then(function() {
+                                console.log('Example upload to S3 successful');
+                                return presignResponse.key;
+                            });
+                        });
+                })
+                .then(function(objectKey) {
+                    return submitSttRequest(objectKey);
+                })
+                .then(function(response) {
                     console.log('STT processing initiated (example)');
                     checkOperationStatus(response.operation);
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('Error in STT process:', error);
                     document.getElementById('processingStt').style.display = 'none';
                     document.getElementById('sendButtonStt').style.display = 'inline-block';

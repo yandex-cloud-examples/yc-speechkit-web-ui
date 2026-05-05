@@ -989,7 +989,7 @@ async function startStreaming() {
         
         // Create WebSocket connection
         const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        const wsUrl = `${wsProtocol}//${window.location.host}/stream?lang=${lang}`;
+        const wsUrl = wsProtocol + '//' + window.location.host + '/stream?lang=' + lang;
         websocket = new WebSocket(wsUrl);
         
         websocket.onopen = function() {

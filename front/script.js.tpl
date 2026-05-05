@@ -1051,11 +1051,14 @@ async function startStreaming() {
                     document.getElementById('partialText').textContent = result.alternatives[0];
                     document.getElementById('partialText').style.color = '';
                 } else if (result.type === 'final' && result.alternatives && result.alternatives.length > 0) {
-                    const finalDiv = document.getElementById('finalText');
-                    const p = document.createElement('p');
-                    p.className = 'stream-final';
-                    p.textContent = result.alternatives[0];
-                    finalDiv.appendChild(p);
+                    const text = result.alternatives[0].trim();
+                    if (text) {
+                        const finalDiv = document.getElementById('finalText');
+                        const p = document.createElement('p');
+                        p.className = 'stream-final';
+                        p.textContent = text;
+                        finalDiv.appendChild(p);
+                    }
                     document.getElementById('partialText').textContent = '';
                     
                     // Auto-scroll to bottom
@@ -1063,9 +1066,10 @@ async function startStreaming() {
                     streamResults.scrollTop = streamResults.scrollHeight;
                 } else if (result.type === 'final_refinement' && result.alternatives && result.alternatives.length > 0) {
                     // Update last final text with refined version
+                    const text = result.alternatives[0].trim();
                     const finalDiv = document.getElementById('finalText');
-                    if (finalDiv.lastChild) {
-                        finalDiv.lastChild.textContent = result.alternatives[0] + ' ';
+                    if (text && finalDiv.lastElementChild && finalDiv.lastElementChild.classList.contains('stream-final')) {
+                        finalDiv.lastElementChild.textContent = text;
                     }
                 }
             } catch (e) {

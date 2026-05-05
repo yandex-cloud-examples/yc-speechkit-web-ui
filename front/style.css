@@ -245,6 +245,26 @@ label {
     border-radius: 4px;
     margin-top: 15px;
 }
+#streamResults {
+    background: #fff !important;
+    border: 1px solid #eee;
+    border-radius: 8px;
+    min-height: 250px;
+    padding: 20px 24px;
+    font-size: 1.2rem;
+    line-height: 1.8;
+}
+#finalText {
+    color: #222;
+}
+#finalText span {
+    color: #222;
+}
+#partialText {
+    color: #bbb !important;
+    font-style: italic;
+    transition: opacity 0.2s ease;
+}
 pre {
     white-space: pre-wrap;
     word-wrap: break-word;

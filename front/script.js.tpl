@@ -1041,12 +1041,12 @@ async function startStreaming() {
                 
                 if (result.type === 'partial' && result.alternatives && result.alternatives.length > 0) {
                     document.getElementById('partialText').textContent = result.alternatives[0];
-                    document.getElementById('partialText').style.color = '#7f8c8d';
+                    document.getElementById('partialText').style.color = '#bbb';
                 } else if (result.type === 'final' && result.alternatives && result.alternatives.length > 0) {
                     const finalDiv = document.getElementById('finalText');
                     const span = document.createElement('span');
                     span.textContent = result.alternatives[0] + ' ';
-                    span.style.color = '#333';
+                    span.style.color = '#222';
                     finalDiv.appendChild(span);
                     document.getElementById('partialText').textContent = '';
                     

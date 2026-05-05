@@ -84,3 +84,25 @@ resource "yandex_storage_object" "style" {
   source_hash  = filemd5("../../front/style.css")
   content_type = "text/css"
 }
+
+resource "yandex_storage_object" "example_mono" {
+  access_key = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+  
+  bucket       = yandex_storage_bucket.front.bucket
+  key          = "examples/example-mono.mp3"
+  source       = "../../front/example-mono.mp3"
+  source_hash  = filemd5("../../front/example-mono.mp3")
+  content_type = "audio/mpeg"
+}
+
+resource "yandex_storage_object" "example_stereo" {
+  access_key = yandex_iam_service_account_static_access_key.sa-static-key.access_key
+  secret_key = yandex_iam_service_account_static_access_key.sa-static-key.secret_key
+  
+  bucket       = yandex_storage_bucket.front.bucket
+  key          = "examples/example-stereo.mp3"
+  source       = "../../front/example-stereo.mp3"
+  source_hash  = filemd5("../../front/example-stereo.mp3")
+  content_type = "audio/mpeg"
+}

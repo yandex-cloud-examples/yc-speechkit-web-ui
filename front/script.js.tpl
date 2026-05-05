@@ -18,6 +18,9 @@ let currentVolume = -19;
 let currentFormat = 'WAV';
 let currentNormType = 'LUFS';
 
+// STT example selection
+let sttExampleKey = null;
+
 // Add CSS for dropdowns
 document.addEventListener('DOMContentLoaded', function() {
     // Enable STREAM tab if feature is enabled
@@ -517,6 +520,45 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('rateForm').classList.add('hidden');
             document.getElementById('sampleRateInput').value = '48000';
         }
+        // Clear example selection when user picks their own file
+        if (file) {
+            sttExampleKey = null;
+            document.getElementById('sttExampleLabel').style.display = 'none';
+            document.getElementById('sttExampleMono').classList.remove('btn-success');
+            document.getElementById('sttExampleMono').classList.add('btn-secondary');
+            document.getElementById('sttExampleStereo').classList.remove('btn-success');
+            document.getElementById('sttExampleStereo').classList.add('btn-secondary');
+        }
+    });
+
+    // STT example buttons
+    function selectSttExample(key, label) {
+        sttExampleKey = key;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('rateForm').classList.add('hidden');
+        document.getElementById('sampleRateInput').value = '48000';
+        document.getElementById('sttExampleLabel').textContent = '✓ ' + label;
+        document.getElementById('sttExampleLabel').style.display = 'inline';
+        // Highlight active button
+        document.getElementById('sttExampleMono').classList.remove('btn-success');
+        document.getElementById('sttExampleMono').classList.add('btn-secondary');
+        document.getElementById('sttExampleStereo').classList.remove('btn-success');
+        document.getElementById('sttExampleStereo').classList.add('btn-secondary');
+        if (key === 'examples/example-mono.mp3') {
+            document.getElementById('sttExampleMono').classList.remove('btn-secondary');
+            document.getElementById('sttExampleMono').classList.add('btn-success');
+        } else {
+            document.getElementById('sttExampleStereo').classList.remove('btn-secondary');
+            document.getElementById('sttExampleStereo').classList.add('btn-success');
+        }
+    }
+
+    document.getElementById('sttExampleMono').addEventListener('click', function() {
+        selectSttExample('examples/example-mono.mp3', 'example-mono.mp3');
+    });
+
+    document.getElementById('sttExampleStereo').addEventListener('click', function() {
+        selectSttExample('examples/example-stereo.mp3', 'example-stereo.mp3');
     });
     
     // STT form submission
@@ -526,7 +568,15 @@ document.addEventListener('DOMContentLoaded', function() {
         var file = formData.get('file');
         var lang = formData.get('lang');
         var rate = formData.get('sampleRate');
-        var fileName = file.name;
+        
+        // Check if user selected a file or an example
+        var hasFile = file && file.size > 0;
+        var hasExample = !!sttExampleKey;
+        
+        if (!hasFile && !hasExample) {
+            alert('Выберите аудиофайл или один из примеров.');
+            return;
+        }
         
         document.getElementById('processingStt').style.display = 'inline-block';
         document.getElementById('sendButtonStt').style.display = 'none';
@@ -541,51 +591,68 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('toggleConversationBtn').querySelector('.collapse-arrow').classList.remove('open');
         document.getElementById('summarySection').innerHTML = '';
         
-        // Presigning URL
-        var encodedFilename = encodeURIComponent(fileName);
+        function submitSttRequest(objectKey) {
+            return fetch(`${api_gw}/stt`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    key: objectKey,
+                    lang: lang,
+                    rate: rate,
+                    summaryInstruction: document.getElementById('summaryInstructionInput').value,
+                    speakerLabeling: document.getElementById('speakerLabelingToggle').checked
+                })
+            }).then(response => response.json());
+        }
         
-        fetch(`${api_gw}/presign?fileName=` + encodedFilename)
-            .then(response => response.json())
-            .then(response => {
-                // Upload to S3
-                var presignedUrl = response.url;
-                
-                return fetch(presignedUrl, {
-                    method: 'PUT',
-                    body: file,
-                    headers: {
-                        'Content-Type': 'binary/octet-stream'
-                    }
-                }).then(() => {
-                    console.log('Upload to S3 successful');
-                    return response.key;
+        if (hasExample) {
+            // Example file is already in S3 — skip upload
+            submitSttRequest(sttExampleKey)
+                .then(response => {
+                    console.log('STT processing initiated (example)');
+                    checkOperationStatus(response.operation);
+                })
+                .catch(error => {
+                    console.error('Error in STT process:', error);
+                    document.getElementById('processingStt').style.display = 'none';
+                    document.getElementById('sendButtonStt').style.display = 'inline-block';
                 });
-            })
-            .then(objectKey => {
-                // Process with STT
-                return fetch(`${api_gw}/stt`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        key: objectKey,
-                        lang: lang,
-                        rate: rate,
-                        summaryInstruction: document.getElementById('summaryInstructionInput').value,
-                        speakerLabeling: document.getElementById('speakerLabelingToggle').checked
-                    })
-                }).then(response => response.json());
-            })
-            .then(response => {
-                console.log('STT processing initiated');
-                checkOperationStatus(response.operation);
-            })
-            .catch(error => {
-                console.error('Error in STT process:', error);
-                document.getElementById('processingStt').style.display = 'none';
-                document.getElementById('sendButtonStt').style.display = 'inline-block';
-            });
+        } else {
+            // User file — presign, upload, then process
+            var fileName = file.name;
+            var encodedFilename = encodeURIComponent(fileName);
+            
+            fetch(`${api_gw}/presign?fileName=` + encodedFilename)
+                .then(response => response.json())
+                .then(response => {
+                    var presignedUrl = response.url;
+                    
+                    return fetch(presignedUrl, {
+                        method: 'PUT',
+                        body: file,
+                        headers: {
+                            'Content-Type': 'binary/octet-stream'
+                        }
+                    }).then(() => {
+                        console.log('Upload to S3 successful');
+                        return response.key;
+                    });
+                })
+                .then(objectKey => {
+                    return submitSttRequest(objectKey);
+                })
+                .then(response => {
+                    console.log('STT processing initiated');
+                    checkOperationStatus(response.operation);
+                })
+                .catch(error => {
+                    console.error('Error in STT process:', error);
+                    document.getElementById('processingStt').style.display = 'none';
+                    document.getElementById('sendButtonStt').style.display = 'inline-block';
+                });
+        }
     });
 });
 

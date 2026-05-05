@@ -1047,6 +1047,10 @@ let isRecording = false;
 let mediaStream;
 
 function setupStreamRecognition() {
+    document.getElementById('eouPauseSlider').addEventListener('input', function() {
+        document.getElementById('eouPauseValue').textContent = this.value + ' мс';
+    });
+
     document.getElementById('startStreamBtn').addEventListener('click', startStreaming);
     document.getElementById('stopStreamBtn').addEventListener('click', stopStreaming);
     document.getElementById('clearStreamBtn').addEventListener('click', function() {
@@ -1083,6 +1087,10 @@ async function startStreaming() {
         const classifiersEnabled = document.getElementById('streamClassifiersToggle').checked;
         if (classifiersEnabled) {
             wsUrl += '&classifiers=all';
+        }
+        const eouPause = document.getElementById('eouPauseSlider').value;
+        if (eouPause !== '500') {
+            wsUrl += '&eouPause=' + eouPause;
         }
         websocket = new WebSocket(wsUrl);
         

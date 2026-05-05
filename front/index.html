@@ -221,6 +221,14 @@
                 </label>
             </div>
 
+            <div class="form-group">
+                <div class="field-annotation">Определение конца фразы<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/stt/eou" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">В процессе потокового распознавания сервер SpeechKit возвращает не всю фразу целиком, а результаты распознавания частей фразы. SpeechKit возвращает законченную фразу только после определения конца фразы. Управляя ожидаемой длительностью пауз между словами в рамках одной фразы (в миллисекундах) – мы можем влиять на определение конца фразы.</span></a></div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <input type="range" id="eouPauseSlider" min="100" max="3000" step="100" value="500" style="flex: 1;">
+                    <span id="eouPauseValue" style="font-size: 0.85rem; min-width: 55px; text-align: right;">500 мс</span>
+                </div>
+            </div>
+
             <div style="margin-top: 15px;">
                 <button id="startStreamBtn" class="btn-success">Начать запись</button>
                 <button id="stopStreamBtn" class="btn-danger" disabled>Остановить</button>

@@ -37,7 +37,8 @@ async def stream_recognize(request, ws):
     lang = request.args.get('lang', 'ru-RU')
     summary_instruction = request.args.get('summaryInstruction', '')
     classifiers_param = request.args.get('classifiers', '')
-    logging.info(f"Language: {lang}, summaryInstruction: {bool(summary_instruction)}, classifiers: {classifiers_param}")
+    eou_pause = request.args.get('eouPause', '')
+    logging.info(f"Language: {lang}, summaryInstruction: {bool(summary_instruction)}, classifiers: {classifiers_param}, eouPause: {eou_pause}")
 
     channel = None
 
@@ -109,6 +110,21 @@ async def stream_recognize(request, ws):
                         ]
                     )
                     logging.info(f"Classifiers enabled: {requested}")
+
+            # Add EOU classifier config if requested
+            if eou_pause:
+                try:
+                    pause_ms = int(eou_pause)
+                    if 100 <= pause_ms <= 3000:
+                        session_kwargs['eou_classifier'] = stt_pb2.EouClassifierOptions(
+                            default_classifier=stt_pb2.DefaultEouClassifier(
+                                type=stt_pb2.DefaultEouClassifier.DEFAULT,
+                                max_pause_between_words_hint_ms=pause_ms
+                            )
+                        )
+                        logging.info(f"EOU pause set to {pause_ms}ms")
+                except ValueError:
+                    logging.warning(f"Invalid eouPause value: {eou_pause}")
 
             recognize_options = stt_pb2.StreamingOptions(**session_kwargs)
             yield stt_pb2.StreamingRequest(session_options=recognize_options)

@@ -61,6 +61,7 @@ async def start(request):
     print(f"Received JSON: {request_json}")
 
     text_value        = request_json.get("text", "Empty")
+    unsafe_mode_value = len(text_value) > 249
     voice_value       = request_json.get("voice", "alexander")
     role_value        = request_json.get("role", "good")
     speed_value       = float(request_json.get("speed", 1.0))
@@ -68,7 +69,6 @@ async def start(request):
     volume_value      = float(request_json.get("volume", -19))
     format_value      = request_json.get("format", "WAV").upper()
     norm_type_value   = request_json.get("normType", "LUFS").upper()
-    unsafe_mode_value = request_json.get("unsafe", False)
 
     fmt = FORMAT_MAP.get(format_value, FORMAT_MAP['WAV'])
     norm_type = NORM_MAP.get(norm_type_value, NORM_MAP['LUFS'])

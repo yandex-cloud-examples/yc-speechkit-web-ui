@@ -17,7 +17,6 @@ let currentPitchShift = 0;
 let currentVolume = -19;
 let currentFormat = 'WAV';
 let currentNormType = 'LUFS';
-let currentUnsafeMode = false;
 
 // Add CSS for dropdowns
 document.addEventListener('DOMContentLoaded', function() {
@@ -248,32 +247,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Unsafe mode toggle
-    document.getElementById('unsafeModeButton').addEventListener('click', function() {
-        currentUnsafeMode = !currentUnsafeMode;
-        const button = this;
-        
-        if (currentUnsafeMode) {
-            button.classList.remove('btn-outline-danger');
-            button.classList.add('btn-danger');
-        } else {
-            button.classList.remove('btn-danger');
-            button.classList.add('btn-outline-danger');
-        }
-        
-        const textInput = document.getElementById('textInput');
-        document.getElementById('unsafeMode').value = currentUnsafeMode ? 'true' : 'false';
-        
-        if (currentUnsafeMode) {
-            textInput.setAttribute('maxlength', '5000');
-        } else {
-            textInput.setAttribute('maxlength', '250');
-        }
-        
-        var currentLength = textInput.value.length;
-        var maxLength = textInput.getAttribute('maxlength');
-        document.getElementById('charCount').textContent = currentLength + '/' + maxLength;
-    });
 });
 
 // Switch TTS language: update voices dict and repopulate dropdowns
@@ -426,8 +399,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pitchShift: currentPitchShift,
                 volume: currentVolume,
                 format: currentFormat,
-                normType: currentNormType,
-                unsafe: currentUnsafeMode
+                normType: currentNormType
             }),
         })
         .then(response => {

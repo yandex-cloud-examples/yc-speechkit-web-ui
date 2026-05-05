@@ -149,15 +149,6 @@ button:hover {
 .btn-danger:hover {
     background: #c0392b;
 }
-.btn-outline-danger {
-    background: white;
-    color: #e74c3c;
-    border: 1px solid #e74c3c;
-}
-.btn-outline-danger:hover {
-    background: #e74c3c;
-    color: white;
-}
 .form-group {
     margin-bottom: 15px;
 }

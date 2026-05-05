@@ -554,11 +554,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.getElementById('sttExampleMono').addEventListener('click', function() {
-        selectSttExample('examples/example-mono.mp3', 'example-mono.mp3');
+        selectSttExample('example-mono.mp3', 'example-mono.mp3');
     });
 
     document.getElementById('sttExampleStereo').addEventListener('click', function() {
-        selectSttExample('examples/example-stereo.mp3', 'example-stereo.mp3');
+        selectSttExample('example-stereo.mp3', 'example-stereo.mp3');
     });
     
     // STT form submission

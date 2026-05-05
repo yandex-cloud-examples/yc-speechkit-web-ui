@@ -641,8 +641,17 @@ function checkOperationStatus(operationId) {
                     
                     // Sort chunks chronologically by start time
                     result.sort(function(a, b) {
-                        var aTime = (a.alternatives && a.alternatives[0]) ? (a.alternatives[0].startTimeMs || 0) : 0;
-                        var bTime = (b.alternatives && b.alternatives[0]) ? (b.alternatives[0].startTimeMs || 0) : 0;
+                        var aAlt = (a.alternatives && a.alternatives[0]) ? a.alternatives[0] : null;
+                        var bAlt = (b.alternatives && b.alternatives[0]) ? b.alternatives[0] : null;
+                        var aTime = aAlt ? (parseInt(aAlt.startTimeMs) || 0) : 0;
+                        var bTime = bAlt ? (parseInt(bAlt.startTimeMs) || 0) : 0;
+                        // Fall back to first word's start_time_ms if alternative-level time is 0
+                        if (aTime === 0 && aAlt && aAlt.words && aAlt.words.length > 0) {
+                            aTime = parseInt(aAlt.words[0].start_time_ms) || 0;
+                        }
+                        if (bTime === 0 && bAlt && bAlt.words && bAlt.words.length > 0) {
+                            bTime = parseInt(bAlt.words[0].start_time_ms) || 0;
+                        }
                         return aTime - bTime;
                     });
 

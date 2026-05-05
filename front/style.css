@@ -571,6 +571,38 @@ pre {
 .show {
     display: block;
 }
+.stream-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding-left: 16px;
+    margin-bottom: 8px;
+}
+.stream-badge {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 10px;
+    line-height: 1.4;
+    white-space: nowrap;
+}
+.stream-badge.badge-red {
+    background: #fde8e8;
+    color: #c0392b;
+}
+.stream-badge.badge-green {
+    background: #e8f8f0;
+    color: #27ae60;
+}
+.stream-badge.badge-blue {
+    background: #e8f0fd;
+    color: #2471a3;
+}
+.stream-badge.badge-grey {
+    background: #f0f0f0;
+    color: #666;
+}
 footer {
     text-align: center;
     padding: 16px 24px;

@@ -1080,6 +1080,10 @@ async function startStreaming() {
         if (streamSummaryInstruction) {
             wsUrl += '&summaryInstruction=' + encodeURIComponent(streamSummaryInstruction);
         }
+        const classifiersEnabled = document.getElementById('streamClassifiersToggle').checked;
+        if (classifiersEnabled) {
+            wsUrl += '&classifiers=all';
+        }
         websocket = new WebSocket(wsUrl);
         
         websocket.onopen = function() {
@@ -1160,6 +1164,63 @@ async function startStreaming() {
                     const finalDiv = document.getElementById('finalText');
                     if (text && finalDiv.lastElementChild && finalDiv.lastElementChild.classList.contains('stream-final')) {
                         finalDiv.lastElementChild.textContent = text;
+                    }
+                } else if (result.type === 'classifier_update' && result.classifier_update) {
+                    const cu = result.classifier_update;
+                    const finalDiv = document.getElementById('finalText');
+
+                    // Find or create badges container after the last .stream-final
+                    let lastFinal = null;
+                    for (let i = finalDiv.children.length - 1; i >= 0; i--) {
+                        if (finalDiv.children[i].classList.contains('stream-final')) {
+                            lastFinal = finalDiv.children[i];
+                            break;
+                        }
+                    }
+
+                    if (lastFinal) {
+                        // Find existing badges div or create one
+                        let badgesDiv = lastFinal.nextElementSibling;
+                        if (!badgesDiv || !badgesDiv.classList.contains('stream-badges')) {
+                            badgesDiv = document.createElement('div');
+                            badgesDiv.className = 'stream-badges';
+                            lastFinal.parentNode.insertBefore(badgesDiv, lastFinal.nextSibling);
+                        }
+
+                        const classifierName = cu.classifier || '';
+                        const labels = cu.labels || [];
+
+                        // Color mapping
+                        const badgeColors = {
+                            'insult': 'badge-red',
+                            'profanity': 'badge-red',
+                            'negative': 'badge-red',
+                            'formal_greeting': 'badge-green',
+                            'informal_greeting': 'badge-green',
+                            'formal_farewell': 'badge-blue',
+                            'informal_farewell': 'badge-blue',
+                            'gender': 'badge-grey',
+                            'answerphone': 'badge-grey',
+                        };
+
+                        labels.forEach(function(lbl) {
+                            if (lbl.confidence >= 0.3) {
+                                // For gender classifier, show the winning label
+                                let displayName = classifierName;
+                                if (classifierName === 'gender') {
+                                    displayName = lbl.label;
+                                }
+
+                                const badge = document.createElement('span');
+                                badge.className = 'stream-badge ' + (badgeColors[classifierName] || 'badge-grey');
+                                badge.textContent = displayName + ' ' + Math.round(lbl.confidence * 100) + '%';
+                                badgesDiv.appendChild(badge);
+                            }
+                        });
+
+                        // Auto-scroll
+                        const streamResults = document.getElementById('streamResults');
+                        streamResults.scrollTop = streamResults.scrollHeight;
                     }
                 } else if (result.type === 'summarization' && result.summarization) {
                     renderStreamSummary(result.summarization);

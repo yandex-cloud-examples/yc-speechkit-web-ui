@@ -36,7 +36,8 @@ async def stream_recognize(request, ws):
     # Get language from query parameter (default: ru-RU)
     lang = request.args.get('lang', 'ru-RU')
     summary_instruction = request.args.get('summaryInstruction', '')
-    logging.info(f"Language: {lang}, summaryInstruction: {bool(summary_instruction)}")
+    classifiers_param = request.args.get('classifiers', '')
+    logging.info(f"Language: {lang}, summaryInstruction: {bool(summary_instruction)}, classifiers: {classifiers_param}")
 
     channel = None
 
@@ -85,6 +86,30 @@ async def stream_recognize(request, ws):
                 )
                 logging.info("Summarization enabled for this session")
 
+            # Add classifiers if requested
+            if classifiers_param:
+                all_classifiers = [
+                    'formal_greeting', 'informal_greeting',
+                    'formal_farewell', 'informal_farewell',
+                    'insult', 'profanity', 'gender', 'negative', 'answerphone'
+                ]
+                if classifiers_param == 'all':
+                    requested = all_classifiers
+                else:
+                    requested = [c.strip() for c in classifiers_param.split(',') if c.strip() in all_classifiers]
+
+                if requested:
+                    session_kwargs['recognition_classifier'] = stt_pb2.RecognitionClassifierOptions(
+                        classifiers=[
+                            stt_pb2.RecognitionClassifier(
+                                classifier=name,
+                                triggers=[stt_pb2.RecognitionClassifier.ON_UTTERANCE]
+                            )
+                            for name in requested
+                        ]
+                    )
+                    logging.info(f"Classifiers enabled: {requested}")
+
             recognize_options = stt_pb2.StreamingOptions(**session_kwargs)
             yield stt_pb2.StreamingRequest(session_options=recognize_options)
 
@@ -126,6 +151,27 @@ async def stream_recognize(request, ws):
                     result['eou_update'] = True
                 elif event_type == 'status_code':
                     result['status_code'] = response.status_code.code_type
+                elif event_type == 'classifier_update':
+                    classifier_result = response.classifier_update.classifier_result
+                    result['classifier_update'] = {
+                        'classifier': classifier_result.classifier if hasattr(classifier_result, 'classifier') else '',
+                        'labels': [],
+                        'highlights': [],
+                    }
+                    if hasattr(classifier_result, 'labels'):
+                        for label in classifier_result.labels:
+                            result['classifier_update']['labels'].append({
+                                'label': label.label if hasattr(label, 'label') else '',
+                                'confidence': label.confidence if hasattr(label, 'confidence') else 0,
+                            })
+                    if hasattr(classifier_result, 'highlights'):
+                        for h in classifier_result.highlights:
+                            result['classifier_update']['highlights'].append({
+                                'text': h.text if hasattr(h, 'text') else '',
+                                'start_time_ms': h.start_time_ms if hasattr(h, 'start_time_ms') else 0,
+                                'end_time_ms': h.end_time_ms if hasattr(h, 'end_time_ms') else 0,
+                            })
+                    logging.info(f"Classifier update: {classifier_result.classifier}")
                 elif event_type == 'summarization':
                     summarization = response.summarization
                     result['summarization'] = {

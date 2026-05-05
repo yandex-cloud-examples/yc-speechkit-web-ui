@@ -212,7 +212,15 @@
                     <option value="pl-PL">Польский</option>
                 </select>
             </div>
-            
+
+            <div class="form-group">
+                <div class="field-annotation">Классификаторы аудио<a class="help-link" href="https://aistudio.yandex.ru/docs/ru/speechkit/stt/analysis#classifier" target="_blank" rel="noopener noreferrer">?<span class="help-tooltip">Классификаторы могут применяться к промежуточным и окончательным результатам распознавания. Поддерживается только для русского языка.</span></a></div>
+                <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="streamClassifiersToggle">
+                    Включить классификаторы (только русский)
+                </label>
+            </div>
+
             <div style="margin-top: 15px;">
                 <button id="startStreamBtn" class="btn-success">Начать запись</button>
                 <button id="stopStreamBtn" class="btn-danger" disabled>Остановить</button>

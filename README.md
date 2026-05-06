@@ -1,37 +1,24 @@
 # SpeechKit Web UI
 
 <img
-  src="images/web-ui-tts.png"
+  src="images/web-ui.png"
   alt="SpeechKit Web UI"
   title="SpeechKit Web UI"
   style="display: inline-block; margin: 0 auto; max-width: 600px">
 
-Данный репозиторий содержит пример веб-приложения, которое обращается к сервису [Yandex SpeechKit](https://cloud.yandex.com/ru/services/speechkit) и отображает его результат в веб-интерфейсе.
+Данный репозиторий содержит веб-приложение, которое позволяет обращаться к сервису [Yandex SpeechKit](https://aistudio.yandex.ru/ru/ai-speech) и работать с ним через веб-интерфейс.
 
-Приложение позволяет ознакомиться с возможностями распознавания и синтеза речи, а также с различными параметрами, доступными при синтезе речи:
-- Можно выбрать и проверить различные доступные [голоса](https://cloud.yandex.com/ru/docs/speechkit/tts/voices)
-- Можно использовать [TTS-разметку](https://cloud.yandex.com/ru/docs/speechkit/tts/markup/tts-markup)
+Приложение позволяет ознакомиться с возможностями асихронного и потокового распознавания, а также – синтеза речи – с различными параметрами, доступными при распознавании и синтезе:
+- Можно выбрать и проверить различные доступные [голоса](https://aistudio.yandex.ru/docs/ru/speechkit/tts/voices.html);
+- Можно использовать [TTS-разметку](https://aistudio.yandex.ru/docs/ru/speechkit/tts/markup/tts-markup.html);
+- Доступны возможности [Speaker Labeling](https://aistudio.yandex.ru/docs/ru/speechkit/stt/speaker-labeling.html) для моноканального аудио;
+- Добавлены возможности для [суммаризации](https://aistudio.yandex.ru/docs/ru/speechkit/stt/llm-results.html) и [классификации](https://aistudio.yandex.ru/docs/ru/speechkit/stt/analysis.html).
 
-Приложение состоит из следующих компонентов:
-- Веб-интерфейс – статичный веб-сайт в бакете Object Storage
-- Serverless Containers для обработки запросов и отправки их в сервис SpeechKit.
+Приложение [можно развернуть](deploy/README.md) локально при помощи Docker Compose, либо в Yandex Cloud, при помощи Terraform.
+
+> Потоковый режим распознавания через микрофон доступен только при локальном развертывании через docker compose, так как необходима поддержка WebSockets, недоступная в Serverless Containers.
 
 Результат синтеза речи сохраняется в бакет.
-
-## Описание модуля
-
-Данный модуль создает следующие ресурсы:
-
-1. Бакет Object Storage
-2. Объекты в бакете для работы статичного веб-сайта
-2. Два контейнера Serverless Containers
-3. API-шлюз
-4. Сервисные учетные записи для работы контейнеров
-5. Статичный ключ и API-ключ
-7. Секрет в [Lockbox](https://cloud.yandex.ru/services/lockbox) для безопасного хранения ключей
-
-В провайдере Terraform используется аутентификация через `key.json` файл. Для развертывания решения, необходима роль `admin` в каталоге, так как создаются сервисные учетные записи и выдаются роли.
-При необходимости, измените аутентификацию на [токен](https://cloud.yandex.ru/ru/docs/iam/concepts/authorization/iam-token).
 
 ## Связанные примеры
 

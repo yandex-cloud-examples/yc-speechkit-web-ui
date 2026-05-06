@@ -6,6 +6,20 @@
   title="SpeechKit Web UI"
   style="display: inline-block; margin: 0 auto; max-width: 400px">
 
+Данный модуль создает следующие ресурсы:
+
+1. Бакет Object Storage
+2. Объекты в бакете для работы статичного веб-сайта
+2. Два контейнера Serverless Containers
+3. API-шлюз
+4. Сервисные учетные записи для работы контейнеров
+5. Статичный ключ и API-ключ
+7. Секрет в [Lockbox](https://cloud.yandex.ru/services/lockbox) для безопасного хранения ключей
+
+В провайдере Terraform используется аутентификация через `key.json` файл. Для развертывания решения, необходима роль `admin` в каталоге, так как создаются сервисные учетные записи и выдаются роли.
+
+При необходимости, измените аутентификацию на [токен](https://cloud.yandex.ru/ru/docs/iam/concepts/authorization/iam-token).
+
 ## Установка
 
 Чтобы запустить данный модуль, создайте файл с переменными `private.auto.tfvars` и сохраните в него folder_id и cloud_id вашего облака и каталога:
@@ -46,4 +60,67 @@ bucket = "https://speechbench-xxx.website.yandexcloud.net"
 ```
 cd deploy/terraform
 terraform destroy
+```
+
+# Локально с помошью docker compose
+
+> Потоковый режим распознавания работает только при развертывании через docker compose, так как необходима поддержка WebSockets.
+
+## Пререквизиты
+
+- Docker и Docker Compose
+- Сервисный аккаунт в Yandex Cloud с ролями:
+  - `ai.speechkit-stt.user`
+  - `ai.speechkit-tts.user`
+  - `ai.languageModels.user` (для суммаризации)
+- S3 бакет
+- Сервисный аккаунт с ролью `storage.editor` в бакете и статичный ключ
+
+## Установка
+
+## Setup
+
+1. **Скопировать `.env` файл**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Заполнить `.env` реквизитами:**
+   ```bash
+   # Yandex Cloud API Key
+   API_SECRET=AQVNxxxxxxxxxxxxxxxxxxxxxxxxx
+
+   # S3 бакет и ключ
+   S3_BUCKET=my-speechkit-bucket
+   S3_KEY=YCAJExxxxxxxxxxxxxxxxx
+   S3_SECRET=YCOxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+
+   # Опционально: Модель для суммаризации
+   MODEL_URI=gpt://b1gxxxxxxxxxxxxxxxxxx/yandexgpt-5.1
+   ```
+
+3. **Запустить:**
+   ```bash
+   cd deploy/local
+   docker-compose up --build
+   ```
+
+   Либо в detach режиме:
+   ```bash
+   cd deploy/local
+   docker-compose up -d --build
+   ```
+
+## Работа с приложением
+
+Откройте брайзер и перейдите по адресу:
+
+```
+http://localhost:8080
+```
+
+## Остановка
+
+```bash
+docker-compose down
 ```

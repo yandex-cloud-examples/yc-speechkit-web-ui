@@ -1,86 +1,33 @@
-// Voices and roles dictionary
-const voices = {
-    lea: ["none"],
-    john: ["none"],
-    naomi: ["modern", "classic"],
-    amira: ["none"],
-    madi: ["none"],
-    saule: ["neutral", "strict"],
-    zhanar: ["neutral", "friendly"],
-    alena: ["neutral", "good"],
-    filipp: ["none"],
-    ermil: ["neutral", "good"],
-    jane: ["neutral", "good", "evil"],
-    omazh: ["neutral", "evil"],
-    zahar: ["neutral", "good"],
-    dasha: ["neutral", "good", "friendly"],
-    julia: ["neutral", "strict"],
-    lera: ["neutral", "friendly"],
-    masha: ["good", "strict", "friendly"],
-    marina: ["neutral", "whisper", "friendly"],
-    alexander: ["neutral", "good"],
-    kirill: ["neutral", "strict", "good"],
-    anton: ["neutral", "good"],
-    madi_ru: ["none"],
-    saule_ru: ["neutral", "strict", "whisper"],
-    zamira_ru: ["neutral", "strict", "friendly"],
-    zhanar_ru: ["neutral", "strict", "friendly"],
-    yulduz_ru: ["neutral", "strict", "friendly", "whisper"],
-    nigora: ["none"],
-    zamira: ["neutral", "strict", "friendly"],
-    yulduz: ["neutral", "strict", "friendly", "whisper"],
-};
+// Check if STREAM feature is enabled (only in local deployment)
+const STREAM_ENABLED = ${stream_enabled};
 
-// Default values
-const defaultVoice = 'marina';
-const defaultRole = 'neutral';
+// Voices and roles dictionary (loaded from voices.json)
+let voicesData = {};
+let voices = {};
+
+// Current TTS language
+let currentTtsLang = 'ru-RU';
 
 // Dropdowns and parameters
 let currentVoice = '';
 let currentRole = '';
+let currentTtsLangLabel = 'Русский';
 let currentSpeed = 1.0;
 let currentPitchShift = 0;
 let currentVolume = -19;
 let currentFormat = 'WAV';
 let currentNormType = 'LUFS';
-let currentUnsafeMode = false;
+
+// STT example selection
+let sttExampleKey = null;
 
 // Add CSS for dropdowns
 document.addEventListener('DOMContentLoaded', function() {
-    // Add CSS for custom dropdowns
-    const style = document.createElement('style');
-    style.textContent = `
-        .custom-dropdown {
-            position: relative;
-            display: inline-block;
-            margin-right: 10px;
-            margin-bottom: 10px;
-        }
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #f9f9f9;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        .dropdown-content a {
-            color: black;
-            padding: 8px 12px;
-            text-decoration: none;
-            display: block;
-            cursor: pointer;
-        }
-        .dropdown-content a:hover {
-            background-color: #f1f1f1;
-        }
-        .show {
-            display: block;
-        }
-    `;
-    document.head.appendChild(style);
+    // Enable STREAM tab if feature is enabled
+    if (STREAM_ENABLED) {
+        document.body.classList.add('stream-enabled');
+        setupStreamRecognition();
+    }
     
     // Setup tabs
     const tabs = document.querySelectorAll('.tab');
@@ -97,10 +44,67 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
-    // Initialize TTS components
-    populateVoicesDropdown();
-    selectDefaultVoice(defaultVoice);
-    
+    // Load TTS examples
+    var ttsExamples = {};
+    fetch('examples.json')
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            ttsExamples = data;
+        })
+        .catch(function(err) {
+            console.error('Failed to load examples.json:', err);
+        });
+
+    function pasteExample(key) {
+        var text = ttsExamples[key] || '';
+        var textArea = document.getElementById('textInput');
+        textArea.value = text;
+        var maxLength = textArea.getAttribute('maxlength');
+        document.getElementById('charCount').textContent = text.length + '/' + maxLength;
+    }
+
+    document.getElementById('exampleBtn1').addEventListener('click', function() { pasteExample('example-1'); });
+    document.getElementById('exampleBtn2').addEventListener('click', function() { pasteExample('example-2'); });
+    document.getElementById('exampleBtn3').addEventListener('click', function() { pasteExample('example-3'); });
+
+    // Load voices data and initialize TTS components
+    fetch('voices.json')
+        .then(function(resp) { return resp.json(); })
+        .then(function(data) {
+            voicesData = data;
+            switchTtsLanguage(currentTtsLang);
+        })
+        .catch(function(err) {
+            console.error('Failed to load voices.json:', err);
+        });
+
+    // Setup TTS language dropdown
+    document.getElementById('ttsLangDropdown').addEventListener('click', function() {
+        document.getElementById('ttsLangDropdownContent').classList.toggle('show');
+    });
+
+    var ttsLangOptions = [
+        { label: 'Русский', value: 'ru-RU' },
+        { label: 'Английский', value: 'en-US' },
+        { label: 'Казахский', value: 'kz-KZ' },
+        { label: 'Узбекский', value: 'uz-UZ' },
+        { label: 'Турецкий', value: 'tr-TR' },
+        { label: 'Немецкий', value: 'de-DE' },
+    ];
+    var ttsLangDropdownContent = document.getElementById('ttsLangDropdownContent');
+    ttsLangOptions.forEach(function(opt) {
+        var item = document.createElement('a');
+        item.textContent = opt.label;
+        item.onclick = function() {
+            currentTtsLang = opt.value;
+            currentTtsLangLabel = opt.label;
+            document.getElementById('ttsLangDropdown').textContent = opt.label;
+            ttsLangDropdownContent.classList.remove('show');
+            switchTtsLanguage(opt.value);
+        };
+        ttsLangDropdownContent.appendChild(item);
+    });
+
     // Setup dropdown toggles
     document.getElementById('voicesDropdown').addEventListener('click', function() {
         document.getElementById('voicesDropdownContent').classList.toggle('show');
@@ -226,6 +230,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 dropdown.classList.remove('show');
             }
         }
+        if (!event.target.matches('#ttsLangDropdown')) {
+            const dropdown = document.getElementById('ttsLangDropdownContent');
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+            }
+        }
         if (!event.target.matches('#formatDropdown')) {
             const dropdown = document.getElementById('formatDropdownContent');
             if (dropdown.classList.contains('show')) {
@@ -240,37 +250,29 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Unsafe mode toggle
-    document.getElementById('unsafeModeButton').addEventListener('click', function() {
-        currentUnsafeMode = !currentUnsafeMode;
-        const button = this;
-        
-        if (currentUnsafeMode) {
-            button.classList.remove('btn-outline-danger');
-            button.classList.add('btn-danger');
-        } else {
-            button.classList.remove('btn-danger');
-            button.classList.add('btn-outline-danger');
-        }
-        
-        const textInput = document.getElementById('textInput');
-        document.getElementById('unsafeMode').value = currentUnsafeMode ? 'true' : 'false';
-        
-        if (currentUnsafeMode) {
-            textInput.setAttribute('maxlength', '5000');
-        } else {
-            textInput.setAttribute('maxlength', '250');
-        }
-        
-        var currentLength = textInput.value.length;
-        var maxLength = textInput.getAttribute('maxlength');
-        document.getElementById('charCount').textContent = currentLength + '/' + maxLength;
-    });
 });
+
+// Switch TTS language: update voices dict and repopulate dropdowns
+function switchTtsLanguage(lang) {
+    voices = voicesData[lang] || {};
+    populateVoicesDropdown();
+    // Select first available voice
+    var firstVoice = Object.keys(voices)[0];
+    if (firstVoice) {
+        selectDefaultVoice(firstVoice);
+    } else {
+        currentVoice = '';
+        currentRole = '';
+        document.getElementById('voicesDropdown').textContent = 'Голос';
+        document.getElementById('rolesDropdown').textContent = 'Амплуа';
+        document.getElementById('rolesDropdownContent').innerHTML = '';
+    }
+}
 
 // Populating voices dropdown
 function populateVoicesDropdown() {
     const voicesDropdownContent = document.getElementById('voicesDropdownContent');
+    voicesDropdownContent.innerHTML = '';
     for (const voice in voices) {
         const item = document.createElement('a');
         item.textContent = voice;
@@ -296,6 +298,8 @@ function populateRolesDropdown(name) {
     const roles = voices[name];
     const rolesDropdownContent = document.getElementById('rolesDropdownContent');
     rolesDropdownContent.innerHTML = '';
+    
+    if (!roles) return;
     
     roles.forEach((role, index) => {
         const item = document.createElement('a');
@@ -398,8 +402,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 pitchShift: currentPitchShift,
                 volume: currentVolume,
                 format: currentFormat,
-                normType: currentNormType,
-                unsafe: currentUnsafeMode
+                normType: currentNormType
             }),
         })
         .then(response => {
@@ -449,61 +452,62 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('copyJsonBtn').addEventListener('click', function() {
         const resultSttDiv = document.getElementById('resultStt');
         const textToCopy = resultSttDiv.textContent;
+        var btn = this;
         
         navigator.clipboard.writeText(textToCopy).then(function() {
-            const originalText = this.textContent;
-            this.textContent = 'Copied!';
-            setTimeout(() => {
-                this.textContent = originalText;
+            var originalHTML = btn.innerHTML;
+            btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5 13l4 4L19 7" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+            btn.classList.add('copied');
+            setTimeout(function() {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('copied');
             }, 1500);
-        }.bind(this));
+        });
+    });
+    
+    // Prevent help links inside collapsible headers from toggling collapse
+    document.querySelectorAll('.collapsible .help-link').forEach(function(link) {
+        link.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
     });
     
     // Toggle Raw JSON visibility
     document.getElementById('toggleJsonBtn').addEventListener('click', function() {
         const section = document.getElementById('rawJsonSection');
+        const arrow = this.querySelector('.collapse-arrow');
         if (section.style.display === 'none') {
             section.style.display = 'block';
-            this.textContent = 'Hide';
+            arrow.classList.add('open');
         } else {
             section.style.display = 'none';
-            this.textContent = 'Show';
+            arrow.classList.remove('open');
         }
     });
     
     // Toggle Speaker Analysis visibility
     document.getElementById('toggleSpeakerBtn').addEventListener('click', function() {
         const section = document.getElementById('speakerAnalysisSection');
+        const arrow = this.querySelector('.collapse-arrow');
         if (section.style.display === 'none') {
             section.style.display = 'block';
-            this.textContent = 'Hide';
+            arrow.classList.add('open');
         } else {
             section.style.display = 'none';
-            this.textContent = 'Show';
+            arrow.classList.remove('open');
         }
     });
     
     // Toggle Conversation Analysis visibility
     document.getElementById('toggleConversationBtn').addEventListener('click', function() {
         const section = document.getElementById('conversationAnalysisSection');
+        const arrow = this.querySelector('.collapse-arrow');
         if (section.style.display === 'none') {
             section.style.display = 'block';
-            this.textContent = 'Hide';
+            arrow.classList.add('open');
         } else {
             section.style.display = 'none';
-            this.textContent = 'Show';
-        }
-    });
-    
-    // Toggle Summary visibility
-    document.getElementById('toggleSummaryBtn').addEventListener('click', function() {
-        const section = document.getElementById('summarySection');
-        if (section.style.display === 'none') {
-            section.style.display = 'block';
-            this.textContent = 'Hide';
-        } else {
-            section.style.display = 'none';
-            this.textContent = 'Show';
+            arrow.classList.remove('open');
         }
     });
     
@@ -516,6 +520,37 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('rateForm').classList.add('hidden');
             document.getElementById('sampleRateInput').value = '48000';
         }
+        // Clear example selection when user picks their own file
+        if (file) {
+            sttExampleKey = null;
+            document.getElementById('sttExampleMono').classList.remove('btn-success');
+            document.getElementById('sttExampleMono').classList.add('btn-secondary');
+            document.getElementById('sttExampleStereo').classList.remove('btn-success');
+            document.getElementById('sttExampleStereo').classList.add('btn-secondary');
+        }
+    });
+
+    // STT example buttons
+    function selectSttExample(key, buttonId) {
+        sttExampleKey = key;
+        document.getElementById('fileInput').value = '';
+        document.getElementById('rateForm').classList.add('hidden');
+        document.getElementById('sampleRateInput').value = '48000';
+        // Highlight active button
+        document.getElementById('sttExampleMono').classList.remove('btn-success');
+        document.getElementById('sttExampleMono').classList.add('btn-secondary');
+        document.getElementById('sttExampleStereo').classList.remove('btn-success');
+        document.getElementById('sttExampleStereo').classList.add('btn-secondary');
+        document.getElementById(buttonId).classList.remove('btn-secondary');
+        document.getElementById(buttonId).classList.add('btn-success');
+    }
+
+    document.getElementById('sttExampleMono').addEventListener('click', function() {
+        selectSttExample('example-mono.mp3', 'sttExampleMono');
+    });
+
+    document.getElementById('sttExampleStereo').addEventListener('click', function() {
+        selectSttExample('example-stereo.mp3', 'sttExampleStereo');
     });
     
     // STT form submission
@@ -525,7 +560,15 @@ document.addEventListener('DOMContentLoaded', function() {
         var file = formData.get('file');
         var lang = formData.get('lang');
         var rate = formData.get('sampleRate');
-        var fileName = file.name;
+        
+        // Check if user selected a file or an example
+        var hasFile = file && file.size > 0;
+        var hasExample = !!sttExampleKey;
+        
+        if (!hasFile && !hasExample) {
+            alert('Выберите аудиофайл или один из примеров.');
+            return;
+        }
         
         document.getElementById('processingStt').style.display = 'inline-block';
         document.getElementById('sendButtonStt').style.display = 'none';
@@ -536,56 +579,95 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('conversationAnalysisSection').innerHTML = '';
         document.getElementById('speakerAnalysisSection').style.display = 'none';
         document.getElementById('conversationAnalysisSection').style.display = 'none';
-        document.getElementById('toggleSpeakerBtn').textContent = 'Show';
-        document.getElementById('toggleConversationBtn').textContent = 'Show';
+        document.getElementById('toggleSpeakerBtn').querySelector('.collapse-arrow').classList.remove('open');
+        document.getElementById('toggleConversationBtn').querySelector('.collapse-arrow').classList.remove('open');
         document.getElementById('summarySection').innerHTML = '';
-        document.getElementById('summarySection').style.display = 'none';
-        document.getElementById('toggleSummaryBtn').textContent = 'Show';
         
-        // Presigning URL
-        var encodedFilename = encodeURIComponent(fileName);
+        function submitSttRequest(objectKey) {
+            return fetch(`${api_gw}/stt`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    key: objectKey,
+                    lang: lang,
+                    rate: rate,
+                    summaryInstruction: document.getElementById('summaryInstructionInput').value,
+                    speakerLabeling: document.getElementById('speakerLabelingToggle').checked
+                })
+            }).then(response => response.json());
+        }
         
-        fetch(`${api_gw}/presign?fileName=` + encodedFilename)
-            .then(response => response.json())
-            .then(response => {
-                // Upload to S3
-                var presignedUrl = response.url;
-                
-                return fetch(presignedUrl, {
-                    method: 'PUT',
-                    body: file,
-                    headers: {
-                        'Content-Type': 'binary/octet-stream'
-                    }
-                }).then(() => {
-                    console.log('Upload to S3 successful');
-                    return response.key;
+        if (hasExample) {
+            // Example file — fetch from web server, upload to S3, then process
+            var exampleFileName = sttExampleKey.split('/').pop();
+            var encodedExampleName = encodeURIComponent(exampleFileName);
+
+            fetch(sttExampleKey)
+                .then(function(resp) { return resp.blob(); })
+                .then(function(blob) {
+                    return fetch(`${api_gw}/presign?fileName=` + encodedExampleName)
+                        .then(function(resp) { return resp.json(); })
+                        .then(function(presignResponse) {
+                            return fetch(presignResponse.url, {
+                                method: 'PUT',
+                                body: blob,
+                                headers: {
+                                    'Content-Type': 'binary/octet-stream'
+                                }
+                            }).then(function() {
+                                console.log('Example upload to S3 successful');
+                                return presignResponse.key;
+                            });
+                        });
+                })
+                .then(function(objectKey) {
+                    return submitSttRequest(objectKey);
+                })
+                .then(function(response) {
+                    console.log('STT processing initiated (example)');
+                    checkOperationStatus(response.operation);
+                })
+                .catch(function(error) {
+                    console.error('Error in STT process:', error);
+                    document.getElementById('processingStt').style.display = 'none';
+                    document.getElementById('sendButtonStt').style.display = 'inline-block';
                 });
-            })
-            .then(objectKey => {
-                // Process with STT
-                return fetch(`${api_gw}/stt`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        key: objectKey,
-                        lang: lang,
-                        rate: rate,
-                        summaryInstruction: document.getElementById('summaryInstructionInput').value
-                    })
-                }).then(response => response.json());
-            })
-            .then(response => {
-                console.log('STT processing initiated');
-                checkOperationStatus(response.operation);
-            })
-            .catch(error => {
-                console.error('Error in STT process:', error);
-                document.getElementById('processingStt').style.display = 'none';
-                document.getElementById('sendButtonStt').style.display = 'inline-block';
-            });
+        } else {
+            // User file — presign, upload, then process
+            var fileName = file.name;
+            var encodedFilename = encodeURIComponent(fileName);
+            
+            fetch(`${api_gw}/presign?fileName=` + encodedFilename)
+                .then(response => response.json())
+                .then(response => {
+                    var presignedUrl = response.url;
+                    
+                    return fetch(presignedUrl, {
+                        method: 'PUT',
+                        body: file,
+                        headers: {
+                            'Content-Type': 'binary/octet-stream'
+                        }
+                    }).then(() => {
+                        console.log('Upload to S3 successful');
+                        return response.key;
+                    });
+                })
+                .then(objectKey => {
+                    return submitSttRequest(objectKey);
+                })
+                .then(response => {
+                    console.log('STT processing initiated');
+                    checkOperationStatus(response.operation);
+                })
+                .catch(error => {
+                    console.error('Error in STT process:', error);
+                    document.getElementById('processingStt').style.display = 'none';
+                    document.getElementById('sendButtonStt').style.display = 'inline-block';
+                });
+        }
     });
 });
 
@@ -642,8 +724,24 @@ function checkOperationStatus(operationId) {
                     
                     // Sort chunks chronologically by start time
                     result.sort(function(a, b) {
-                        var aTime = (a.alternatives && a.alternatives[0]) ? (a.alternatives[0].startTimeMs || 0) : 0;
-                        var bTime = (b.alternatives && b.alternatives[0]) ? (b.alternatives[0].startTimeMs || 0) : 0;
+                        var aAlt = (a.alternatives && a.alternatives[0]) ? a.alternatives[0] : null;
+                        var bAlt = (b.alternatives && b.alternatives[0]) ? b.alternatives[0] : null;
+
+                        // Prefer first word's start_time_ms (most reliable), fall back to alternative-level startTimeMs
+                        var aTime = 0;
+                        if (aAlt && aAlt.words && aAlt.words.length > 0) {
+                            aTime = parseInt(aAlt.words[0].start_time_ms) || 0;
+                        } else if (aAlt) {
+                            aTime = parseInt(aAlt.startTimeMs) || 0;
+                        }
+
+                        var bTime = 0;
+                        if (bAlt && bAlt.words && bAlt.words.length > 0) {
+                            bTime = parseInt(bAlt.words[0].start_time_ms) || 0;
+                        } else if (bAlt) {
+                            bTime = parseInt(bAlt.startTimeMs) || 0;
+                        }
+
                         return aTime - bTime;
                     });
 
@@ -895,12 +993,60 @@ function checkOperationStatus(operationId) {
                         card.className = 'analysis-card';
                         
                         summaryData.results.forEach(function(item) {
-                            const p = document.createElement('p');
-                            p.style.margin = '0 0 8px 0';
-                            p.style.fontSize = '0.85rem';
-                            p.style.lineHeight = '1.5';
-                            p.textContent = item.response || '';
-                            card.appendChild(p);
+                            var responseText = item.response || '';
+                            
+                            // Strip markdown code fences if present (e.g. ```json ... ```)
+                            var fenceStart = new RegExp('^' + '`'.repeat(3) + '(?:json)?\\s*\\n?');
+                            var fenceEnd = new RegExp('\\n?' + '`'.repeat(3) + '\\s*$');
+                            responseText = responseText.replace(fenceStart, '').replace(fenceEnd, '').trim();
+                            
+                            // Try to parse as JSON and pretty-print it
+                            try {
+                                var parsed = JSON.parse(responseText);
+                                if (typeof parsed === 'object' && parsed !== null) {
+                                    // Render each field as a labeled paragraph
+                                    Object.keys(parsed).forEach(function(key) {
+                                        var val = parsed[key];
+                                        var wrapper = document.createElement('div');
+                                        wrapper.style.margin = '0 0 10px 0';
+                                        
+                                        var label = document.createElement('div');
+                                        label.style.fontSize = '0.75rem';
+                                        label.style.fontWeight = '600';
+                                        label.style.color = '#7f8c8d';
+                                        label.style.textTransform = 'uppercase';
+                                        label.style.letterSpacing = '0.5px';
+                                        label.style.marginBottom = '2px';
+                                        label.textContent = key;
+                                        wrapper.appendChild(label);
+                                        
+                                        var content = document.createElement('p');
+                                        content.style.margin = '0';
+                                        content.style.fontSize = '0.85rem';
+                                        content.style.lineHeight = '1.5';
+                                        if (typeof val === 'string') {
+                                            content.textContent = val;
+                                        } else {
+                                            content.style.fontFamily = 'monospace';
+                                            content.style.whiteSpace = 'pre-wrap';
+                                            content.textContent = JSON.stringify(val, null, 2);
+                                        }
+                                        wrapper.appendChild(content);
+                                        
+                                        card.appendChild(wrapper);
+                                    });
+                                } else {
+                                    throw new Error('not an object');
+                                }
+                            } catch (e) {
+                                // Not valid JSON — display as plain text
+                                const p = document.createElement('p');
+                                p.style.margin = '0 0 8px 0';
+                                p.style.fontSize = '0.85rem';
+                                p.style.lineHeight = '1.5';
+                                p.textContent = responseText;
+                                card.appendChild(p);
+                            }
                         });
                         
                         if (summaryData.content_usage) {
@@ -933,4 +1079,349 @@ function checkOperationStatus(operationId) {
     }
     
     checkStatus();
+}
+
+function renderStreamSummary(summaryData) {
+    const section = document.getElementById('streamSummarySection');
+    section.innerHTML = '';
+
+    if (summaryData && summaryData.results && summaryData.results.length > 0) {
+        const card = document.createElement('div');
+        card.className = 'analysis-card stream-summary';
+
+        summaryData.results.forEach(function(item) {
+            var responseText = item.response || '';
+
+            // Strip markdown code fences if present
+            var fenceStart = new RegExp('^' + '`'.repeat(3) + '(?:json)?\\s*\\n?');
+            var fenceEnd = new RegExp('\\n?' + '`'.repeat(3) + '\\s*$');
+            responseText = responseText.replace(fenceStart, '').replace(fenceEnd, '').trim();
+
+            // Try to parse as JSON and pretty-print it
+            try {
+                var parsed = JSON.parse(responseText);
+                if (typeof parsed === 'object' && parsed !== null) {
+                    Object.keys(parsed).forEach(function(key) {
+                        var val = parsed[key];
+                        var wrapper = document.createElement('div');
+                        wrapper.style.margin = '0 0 10px 0';
+
+                        var label = document.createElement('div');
+                        label.style.fontSize = '0.75rem';
+                        label.style.fontWeight = '600';
+                        label.style.color = '#7f8c8d';
+                        label.style.textTransform = 'uppercase';
+                        label.style.letterSpacing = '0.5px';
+                        label.style.marginBottom = '2px';
+                        label.textContent = key;
+                        wrapper.appendChild(label);
+
+                        var content = document.createElement('p');
+                        content.style.margin = '0';
+                        content.style.fontSize = '0.85rem';
+                        content.style.lineHeight = '1.5';
+                        if (typeof val === 'string') {
+                            content.textContent = val;
+                        } else {
+                            content.style.fontFamily = 'monospace';
+                            content.style.whiteSpace = 'pre-wrap';
+                            content.textContent = JSON.stringify(val, null, 2);
+                        }
+                        wrapper.appendChild(content);
+                        card.appendChild(wrapper);
+                    });
+                } else {
+                    throw new Error('not an object');
+                }
+            } catch (e) {
+                var p = document.createElement('p');
+                p.style.margin = '0 0 8px 0';
+                p.style.fontSize = '0.85rem';
+                p.style.lineHeight = '1.5';
+                p.textContent = responseText;
+                card.appendChild(p);
+            }
+        });
+
+        if (summaryData.content_usage) {
+            var usage = document.createElement('div');
+            usage.style.fontSize = '0.75rem';
+            usage.style.color = '#7f8c8d';
+            usage.style.marginTop = '8px';
+            usage.style.borderTop = '1px solid #d4edda';
+            usage.style.paddingTop = '6px';
+            usage.textContent = 'Tokens: ' +
+                (summaryData.content_usage.input_text_tokens || 0) + ' input, ' +
+                (summaryData.content_usage.completion_tokens || 0) + ' completion, ' +
+                (summaryData.content_usage.total_tokens || 0) + ' total';
+            card.appendChild(usage);
+        }
+
+        section.appendChild(card);
+    } else {
+        section.innerHTML = '<div class="analysis-card stream-summary">No summarization data available.</div>';
+    }
+}
+
+// Streaming recognition variables
+let mediaRecorder;
+let websocket;
+let audioContext;
+let audioWorkletNode;
+let isRecording = false;
+let mediaStream;
+
+function setupStreamRecognition() {
+    document.getElementById('eouPauseSlider').addEventListener('input', function() {
+        document.getElementById('eouPauseValue').textContent = this.value + ' мс';
+    });
+
+    document.getElementById('startStreamBtn').addEventListener('click', startStreaming);
+    document.getElementById('stopStreamBtn').addEventListener('click', stopStreaming);
+    document.getElementById('clearStreamBtn').addEventListener('click', function() {
+        document.getElementById('partialText').textContent = '';
+        document.getElementById('finalText').innerHTML = '';
+        document.getElementById('streamSummarySection').innerHTML = '';
+    });
+}
+
+async function startStreaming() {
+    try {
+        // Request microphone access
+        mediaStream = await navigator.mediaDevices.getUserMedia({ 
+            audio: {
+                channelCount: 1,
+                sampleRate: 16000,
+                echoCancellation: true,
+                noiseSuppression: true
+            } 
+        });
+        
+        const lang = document.getElementById('streamLanguageSelect').value;
+        const streamSummaryInstruction = document.getElementById('streamSummaryInstructionInput').value;
+        
+        // Clear previous summary
+        document.getElementById('streamSummarySection').innerHTML = '';
+        
+        // Create WebSocket connection
+        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        let wsUrl = wsProtocol + '//' + window.location.host + '/stream?lang=' + lang;
+        if (streamSummaryInstruction) {
+            wsUrl += '&summaryInstruction=' + encodeURIComponent(streamSummaryInstruction);
+        }
+        const classifiersEnabled = document.getElementById('streamClassifiersToggle').checked;
+        if (classifiersEnabled) {
+            wsUrl += '&classifiers=all';
+        }
+        const eouPause = document.getElementById('eouPauseSlider').value;
+        if (eouPause !== '500') {
+            wsUrl += '&eouPause=' + eouPause;
+        }
+        websocket = new WebSocket(wsUrl);
+        
+        websocket.onopen = function() {
+            console.log('WebSocket connected');
+            
+            // Add session separator if there are previous results
+            const finalDiv = document.getElementById('finalText');
+            if (finalDiv.children.length > 0) {
+                const sep = document.createElement('hr');
+                sep.className = 'stream-separator';
+                finalDiv.appendChild(sep);
+            }
+            
+            // Setup audio recording
+            audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+            const source = audioContext.createMediaStreamSource(mediaStream);
+            
+            // Use ScriptProcessorNode for compatibility
+            const processor = audioContext.createScriptProcessor(4096, 1, 1);
+            
+            processor.onaudioprocess = function(e) {
+                if (!isRecording) return;
+                
+                const inputData = e.inputBuffer.getChannelData(0);
+                // Convert Float32Array to Int16Array (LINEAR16_PCM)
+                const int16Data = new Int16Array(inputData.length);
+                for (let i = 0; i < inputData.length; i++) {
+                    const s = Math.max(-1, Math.min(1, inputData[i]));
+                    int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+                }
+                
+                // Send audio chunk to backend
+                if (websocket && websocket.readyState === WebSocket.OPEN) {
+                    websocket.send(int16Data.buffer);
+                }
+            };
+            
+            source.connect(processor);
+            processor.connect(audioContext.destination);
+            
+            isRecording = true;
+            document.getElementById('startStreamBtn').disabled = true;
+            document.getElementById('stopStreamBtn').disabled = false;
+            document.getElementById('partialText').textContent = 'Слушаю...';
+        };
+        
+        websocket.onmessage = function(event) {
+            try {
+                const result = JSON.parse(event.data);
+                
+                if (result.type === 'error') {
+                    console.error('Recognition error:', result.message);
+                    document.getElementById('partialText').textContent = 'Ошибка: ' + result.message;
+                    document.getElementById('partialText').style.color = '#e74c3c';
+                    return;
+                }
+                
+                if (result.type === 'partial' && result.alternatives && result.alternatives.length > 0) {
+                    document.getElementById('partialText').textContent = result.alternatives[0];
+                    document.getElementById('partialText').style.color = '';
+                } else if (result.type === 'final' && result.alternatives && result.alternatives.length > 0) {
+                    const text = result.alternatives[0].trim();
+                    if (text) {
+                        const finalDiv = document.getElementById('finalText');
+                        const p = document.createElement('p');
+                        p.className = 'stream-final';
+                        p.textContent = text;
+                        finalDiv.appendChild(p);
+                    }
+                    document.getElementById('partialText').textContent = '';
+                    
+                    // Auto-scroll to bottom
+                    const streamResults = document.getElementById('streamResults');
+                    streamResults.scrollTop = streamResults.scrollHeight;
+                } else if (result.type === 'final_refinement' && result.alternatives && result.alternatives.length > 0) {
+                    // Update last final text with refined version
+                    const text = result.alternatives[0].trim();
+                    const finalDiv = document.getElementById('finalText');
+                    if (text && finalDiv.lastElementChild && finalDiv.lastElementChild.classList.contains('stream-final')) {
+                        finalDiv.lastElementChild.textContent = text;
+                    }
+                } else if (result.type === 'classifier_update' && result.classifier_update) {
+                    const cu = result.classifier_update;
+                    const finalDiv = document.getElementById('finalText');
+
+                    // Find or create badges container after the last .stream-final
+                    let lastFinal = null;
+                    for (let i = finalDiv.children.length - 1; i >= 0; i--) {
+                        if (finalDiv.children[i].classList.contains('stream-final')) {
+                            lastFinal = finalDiv.children[i];
+                            break;
+                        }
+                    }
+
+                    if (lastFinal) {
+                        // Find existing badges div or create one
+                        let badgesDiv = lastFinal.nextElementSibling;
+                        if (!badgesDiv || !badgesDiv.classList.contains('stream-badges')) {
+                            badgesDiv = document.createElement('div');
+                            badgesDiv.className = 'stream-badges';
+                            lastFinal.parentNode.insertBefore(badgesDiv, lastFinal.nextSibling);
+                        }
+
+                        const classifierName = cu.classifier || '';
+                        const labels = cu.labels || [];
+
+                        // Color mapping
+                        const badgeColors = {
+                            'insult': 'badge-red',
+                            'profanity': 'badge-red',
+                            'negative': 'badge-red',
+                            'formal_greeting': 'badge-green',
+                            'informal_greeting': 'badge-green',
+                            'formal_farewell': 'badge-blue',
+                            'informal_farewell': 'badge-blue',
+                            'gender': 'badge-grey',
+                            'answerphone': 'badge-grey',
+                        };
+
+                        labels.forEach(function(lbl) {
+                            if (lbl.confidence >= 0.3) {
+                                // For gender classifier, show the winning label
+                                let displayName = classifierName;
+                                if (classifierName === 'gender') {
+                                    displayName = lbl.label;
+                                }
+
+                                const badge = document.createElement('span');
+                                badge.className = 'stream-badge ' + (badgeColors[classifierName] || 'badge-grey');
+                                badge.textContent = displayName + ' ' + Math.round(lbl.confidence * 100) + '%';
+                                badgesDiv.appendChild(badge);
+                            }
+                        });
+
+                        // Auto-scroll
+                        const streamResults = document.getElementById('streamResults');
+                        streamResults.scrollTop = streamResults.scrollHeight;
+                    }
+                } else if (result.type === 'summarization' && result.summarization) {
+                    renderStreamSummary(result.summarization);
+                }
+            } catch (e) {
+                console.error('Error parsing WebSocket message:', e);
+            }
+        };
+        
+        websocket.onerror = function(error) {
+            console.error('WebSocket error:', error);
+            document.getElementById('partialText').textContent = 'Ошибка соединения';
+            document.getElementById('partialText').style.color = '#e74c3c';
+            stopStreaming();
+        };
+        
+        websocket.onclose = function() {
+            console.log('WebSocket closed');
+            websocket = null;
+            if (isRecording) {
+                isRecording = false;
+                document.getElementById('startStreamBtn').disabled = false;
+                document.getElementById('stopStreamBtn').disabled = true;
+            }
+        };
+        
+    } catch (error) {
+        console.error('Error accessing microphone:', error);
+        alert('Не удалось получить доступ к микрофону. Проверьте разрешения браузера.');
+    }
+}
+
+function stopStreaming() {
+    isRecording = false;
+    
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(track => track.stop());
+        mediaStream = null;
+    }
+    
+    if (audioContext) {
+        audioContext.close();
+        audioContext = null;
+    }
+    
+    if (websocket && websocket.readyState === WebSocket.OPEN) {
+        // Send END but don't close — let the server finish sending
+        // (including summarization), then close from onclose/timeout
+        websocket.send('END');
+        
+        // Safety timeout: if server doesn't close the connection
+        // within 30 seconds (summarization can take time), force close
+        setTimeout(function() {
+            if (websocket && websocket.readyState === WebSocket.OPEN) {
+                console.log('Force closing WebSocket after timeout');
+                websocket.close();
+                websocket = null;
+            }
+        }, 30000);
+    } else {
+        websocket = null;
+    }
+    
+    document.getElementById('startStreamBtn').disabled = false;
+    document.getElementById('stopStreamBtn').disabled = true;
+    
+    const partialText = document.getElementById('partialText');
+    if (partialText.textContent === 'Слушаю...') {
+        partialText.textContent = '';
+    }
 }

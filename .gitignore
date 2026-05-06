@@ -37,5 +37,8 @@ terraform.rc
 # key file
 key.json
 
+# Local deployment secrets
+deploy/local/.env
+
 # Various
 .DS_Store

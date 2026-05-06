@@ -1,0 +1,33 @@
+{
+  "ru-RU": {
+    "jane": ["neutral", "good", "evil"],
+    "oksana": ["neutral"],
+    "alyss": ["neutral"],
+    "omazh": ["neutral"],
+    "zahar": ["neutral"],
+    "ermil": ["neutral", "good", "evil"],
+    "filipp": ["neutral"],
+    "madirus": ["neutral"],
+    "masha": ["neutral", "good", "evil"]
+  },
+  "en-US": {
+    "john": ["neutral"],
+    "nick": ["neutral"],
+    "eric": ["neutral"]
+  },
+  "kz-KZ": {
+    "zhanar": ["neutral", "good", "evil"],
+    "saule": ["neutral", "good"],
+    "madi": ["neutral"]
+  },
+  "uz-UZ": {
+    "zamira": ["neutral", "good"],
+    "yulduz": ["neutral", "good"]
+  },
+  "tr-TR": {
+    "filiz": ["neutral"]
+  },
+  "de-DE": {
+    "lea": ["neutral"]
+  }
+}

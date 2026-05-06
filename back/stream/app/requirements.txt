@@ -1,0 +1,6 @@
+sanic
+sanic-cors
+websockets
+grpcio
+grpcio-tools
+yandexcloud

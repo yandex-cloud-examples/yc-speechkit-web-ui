@@ -1,0 +1,78 @@
+version: '3.8'
+
+services:
+  tts:
+    build:
+      context: ../../back/tts
+      dockerfile: Dockerfile
+    container_name: speechkit-tts
+    environment:
+      - PORT=8080
+      - API_SECRET=${API_SECRET}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_KEY=${S3_KEY}
+      - S3_SECRET=${S3_SECRET}
+    networks:
+      - speechkit-network
+    restart: unless-stopped
+
+  stt:
+    build:
+      context: ../../back/stt
+      dockerfile: Dockerfile
+    container_name: speechkit-stt
+    environment:
+      - PORT=8080
+      - API_SECRET=${API_SECRET}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_KEY=${S3_KEY}
+      - S3_SECRET=${S3_SECRET}
+      - MODEL_URI=${MODEL_URI:-}
+    networks:
+      - speechkit-network
+    restart: unless-stopped
+
+  stream:
+    build:
+      context: ../../back/stream
+      dockerfile: Dockerfile
+    container_name: speechkit-stream
+    environment:
+      - PORT=8080
+      - API_SECRET=${API_SECRET}
+      - MODEL_URI=${MODEL_URI:-}
+    networks:
+      - speechkit-network
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    container_name: speechkit-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ../../front:/usr/share/nginx/html:ro
+      - ../../front/script.js.tpl:/tmp/script.js.tpl:ro
+      - script-volume:/usr/share/nginx/html-rw
+    environment:
+      - api_gw=${PUBLIC_URL:-http://localhost:8080}
+      - stream_enabled=true
+    command: >
+      sh -c "cp -r /usr/share/nginx/html/* /usr/share/nginx/html-rw/ &&
+             envsubst < /tmp/script.js.tpl > /usr/share/nginx/html-rw/script.js &&
+             nginx -g 'daemon off;'"
+    depends_on:
+      - tts
+      - stt
+      - stream
+    networks:
+      - speechkit-network
+    restart: unless-stopped
+
+networks:
+  speechkit-network:
+    driver: bridge
+
+volumes:
+  script-volume:

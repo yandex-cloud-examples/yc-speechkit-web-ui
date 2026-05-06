@@ -76,6 +76,7 @@ async def upload_file(request: Request):
     rate = data.get('rate', 48000)
 
     summary_instruction = data.get('summaryInstruction', 'Summarize this conversation briefly, highlighting the key points and outcome.')
+    speaker_labeling = data.get('speakerLabeling', False)
     print(f"rate: {rate}, lang: {lang}")
 
     if key.lower().endswith(".mp3"):
@@ -88,7 +89,7 @@ async def upload_file(request: Request):
         return response.json({"error": "Unsupported file type"}, status=400)
 
     url = create_presigned_url('get_object', key)
-    operation_id = create_recognition_task(url, container_type, lang, rate, summary_instruction)
+    operation_id = create_recognition_task(url, container_type, lang, rate, summary_instruction, speaker_labeling)
 
     if not operation_id:
         return response.json({"error": "Failed to create recognition task"}, status=500)
@@ -209,7 +210,7 @@ def _create_grpc_channel():
     return channel, metadata
 
 # Function - Create recognition task via v3 gRPC AsyncRecognizer.RecognizeFile
-def create_recognition_task(presigned_url, container_type, lang, rate=48000, summary_instruction=''):
+def create_recognition_task(presigned_url, container_type, lang, rate=48000, summary_instruction='', speaker_labeling=False):
     channel, metadata = _create_grpc_channel()
     stub = stt_service_pb2_grpc.AsyncRecognizerStub(channel)
 
@@ -259,11 +260,20 @@ def create_recognition_task(presigned_url, container_type, lang, rate=48000, sum
             ]
         )
 
+    speaker_labeling_options = None
+    if speaker_labeling:
+        speaker_labeling_options = stt_pb2.SpeakerLabelingOptions(
+            speaker_labeling=stt_pb2.SpeakerLabelingOptions.SPEAKER_LABELING_ENABLED,
+        )
+
     recognize_request = stt_pb2.RecognizeFileRequest(
         uri=presigned_url,
         recognition_model=recognition_model,
         speech_analysis=speech_analysis,
     )
+
+    if speaker_labeling_options:
+        recognize_request.speaker_labeling.CopyFrom(speaker_labeling_options)
 
     if summarization:
         recognize_request.summarization.CopyFrom(summarization)
